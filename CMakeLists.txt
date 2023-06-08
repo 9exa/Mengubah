@@ -56,7 +56,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 include_directories(PUBLIC ${NANO_INCLUDE_DIR} ${MINIAUDIO_INCLUE_DIR} ${MenguPitchy_SOURCE_DIR})
 link_directories(PUBLIC ${NANO_LIB_DIR})
 
-
+## Apps
 add_executable(MenguPitchy)
 target_link_libraries(MenguPitchy PUBLIC ${NANO_LIB} mengu_compiler_flags)
 target_sources(MenguPitchy PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengupitchy.cpp)
@@ -65,9 +65,23 @@ add_executable(MenguStretchy)
 target_link_libraries(MenguStretchy PUBLIC ${NANO_LIB} mengu_compiler_flags)
 target_sources(MenguStretchy PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengustretchy.cpp)
 
-add_executable(Mengubah)
-target_link_libraries(Mengubah PUBLIC ${NANO_LIB} mengu_compiler_flags)
-target_sources(Mengubah PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/RealTimeChanger.cpp)
+add_executable(MenguVoice)
+target_link_libraries(MenguVoice PUBLIC ${NANO_LIB} mengu_compiler_flags)
+target_sources(MenguVoice PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/RealTimeChanger.cpp)
+
+
+## Plugins
+
+
+set(LV2_DEFAULT_DIR "${PROJECT_BINARY_DIR}/mengubah.lv2")
+
+add_library(Mengubah_lv2 MODULE)
+set_target_properties(Mengubah_lv2 PROPERTIES PREFIX "")
+set_target_properties(Mengubah_lv2 PROPERTIES OUTPUT_NAME "mengubah")
+set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LV2_DEFAULT_DIR})
+target_link_libraries(Mengubah_lv2 PUBLIC ${NANO_LIB} mengu_compiler_flags)
+target_sources(Mengubah_lv2 PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengubah_lv2.cpp)
+file(COPY mengubah.ttl manifest.ttl DESTINATION ${LV2_DEFAULT_DIR})
 
 
 #Test executables

@@ -5,8 +5,9 @@ Applications
 ============
 - MenguPitchy - Pitchshifted audio file player and saver
 - MenguStretchy - Timestretched audio file player and saver
+- MenguVoice - Voice changer with modular pitch shifter effects
 
-(Why not combine them into one app? Because I converted them from unit tests into apps and I'm too lazy to refactor the underlying code to stake them together)
+(Why not combine Pitchy and Stretchy into one app? Because I converted them from unit tests into apps and I'm too lazy to refactor the underlying code to stake them together)
 
 Plugins (and formats)
 ===========
