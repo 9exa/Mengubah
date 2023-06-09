@@ -55,9 +55,9 @@ MicrophoneAudioCapture::MicrophoneAudioCapture() {
     raw_bufferf.resize(1<<12);
 
 
-    // _pitch_shifters[0] = new dsp::SOLAPitchShifter(new dsp::WSOLATimeStretcher(), _device.capture.channels);
-    // _pitch_shifters[0] = new dsp::SOLAPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(), _device.capture.channels);
-    // _pitch_shifters[1] = new dsp::SOLAPitchShifter(new dsp::PSOLATimeStretcher(), _device.capture.channels);
+    // _pitch_shifters[0] = new dsp::TimeStretchPitchShifter(new dsp::WSOLATimeStretcher(), _device.capture.channels);
+    // _pitch_shifters[0] = new dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(), _device.capture.channels);
+    // _pitch_shifters[1] = new dsp::TimeStretchPitchShifter(new dsp::PSOLATimeStretcher(), _device.capture.channels);
 
 }
 

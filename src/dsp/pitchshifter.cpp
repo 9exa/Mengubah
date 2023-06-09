@@ -481,7 +481,7 @@ void PhaseVocoderPitchShifterV2::reset() {
     _transformed_buffer.resize(ProcSize, Complex(0.0f));
 }
 
-SOLAPitchShifter::SOLAPitchShifter(TimeStretcher *stretcher, uint32_t nchannels):
+TimeStretchPitchShifter::TimeStretchPitchShifter(TimeStretcher *stretcher, uint32_t nchannels):
     _stretcher(stretcher),
     _resampler(nchannels, 1.0f) {
     _stretcher->set_stretch_factor(1.0f);
@@ -494,11 +494,11 @@ SOLAPitchShifter::SOLAPitchShifter(TimeStretcher *stretcher, uint32_t nchannels)
 }
 
 
-SOLAPitchShifter::~SOLAPitchShifter() {
+TimeStretchPitchShifter::~TimeStretchPitchShifter() {
     delete _stretcher;
 }
 
-void SOLAPitchShifter::push_signal(const Complex *input, const uint32_t &size) {
+void TimeStretchPitchShifter::push_signal(const Complex *input, const uint32_t &size) {
     // _raw_buffer.extend_back(input, size);
     _stretcher->push_signal(input, size);
     // _pitch_shifting_stretcher.push_signal(input, size);
@@ -506,7 +506,7 @@ void SOLAPitchShifter::push_signal(const Complex *input, const uint32_t &size) {
     
 }
 
-uint32_t SOLAPitchShifter::pop_transformed_signal(Complex *output, const uint32_t &size) {
+uint32_t TimeStretchPitchShifter::pop_transformed_signal(Complex *output, const uint32_t &size) {
     // do transform, eagerly
     // resample the time-stretch pitch shifted samples
     // while (_pitch_shifting_stretcher.n_transformed_ready() >= MinResampleInputSize) {
@@ -552,11 +552,11 @@ uint32_t SOLAPitchShifter::pop_transformed_signal(Complex *output, const uint32_
     return n;
 }
 
-uint32_t SOLAPitchShifter::n_transformed_ready() const {
+uint32_t TimeStretchPitchShifter::n_transformed_ready() const {
     return _transformed_buffer.size();
 }
 
-void SOLAPitchShifter::reset() {
+void TimeStretchPitchShifter::reset() {
     _raw_buffer.resize(0);
     _transformed_buffer.resize(0);
 
@@ -567,7 +567,7 @@ void SOLAPitchShifter::reset() {
     // _pitch_shifting_stretcher.push_signal(zeros, MinResampleInputSize);
 }
 
-void SOLAPitchShifter::set_shift_factor(const float &shift_factor) {
+void TimeStretchPitchShifter::set_shift_factor(const float &shift_factor) {
     _shift_factor = shift_factor;
     _stretcher->set_stretch_factor(shift_factor);
 

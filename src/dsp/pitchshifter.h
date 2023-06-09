@@ -136,10 +136,10 @@ private:
 };
 
 // Shifts by resampling a time stretcher
-class SOLAPitchShifter: public PitchShifter {
+class TimeStretchPitchShifter: public PitchShifter {
 public:
-    SOLAPitchShifter(TimeStretcher *stretcher, uint32_t nchannels);
-    ~SOLAPitchShifter();
+    TimeStretchPitchShifter(TimeStretcher *stretcher, uint32_t nchannels);
+    ~TimeStretchPitchShifter();
 
     virtual void push_signal(const Complex *input, const uint32_t &size) override;
     virtual uint32_t pop_transformed_signal(Complex *output, const uint32_t &size) override;
@@ -170,10 +170,10 @@ private:
 
 };
 /*
-class PSOLAPitchShifter: public PitchShifter {
+class PTimeStretchPitchShifter: public PitchShifter {
 public:
-    PSOLAPitchShifter(uint32_t nchannels);
-    ~PSOLAPitchShifter();
+    PTimeStretchPitchShifter(uint32_t nchannels);
+    ~PTimeStretchPitchShifter();
 
     virtual void push_signal(const Complex *input, const uint32_t &size) override;
     virtual uint32_t pop_transformed_signal(Complex *output, const uint32_t &size) override;

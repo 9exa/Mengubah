@@ -23,10 +23,10 @@ struct PluginHandler {
 static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double sample_rate, const char *bundle_path, const LV2_Feature *const *features) {
     PluginHandler *plugin = new PluginHandler;
     plugin->effects = {
-        new SOLAPitchShifter(new WSOLATimeStretcher(), 1),
-        new SOLAPitchShifter(new PSOLATimeStretcher(), 1),
-        new SOLAPitchShifter(new PhaseVocoderTimeStretcher(true), 1),
-        new SOLAPitchShifter(new PhaseVocoderDoneRightTimeStretcher(true), 1),
+        new TimeStretchPitchShifter(new WSOLATimeStretcher(), 1),
+        new TimeStretchPitchShifter(new PSOLATimeStretcher(), 1),
+        new TimeStretchPitchShifter(new PhaseVocoderTimeStretcher(true), 1),
+        new TimeStretchPitchShifter(new PhaseVocoderDoneRightTimeStretcher(true), 1),
     };
 
     return plugin;

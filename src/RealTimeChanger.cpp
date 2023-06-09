@@ -79,16 +79,16 @@ void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
     dsp::Effect *new_effect;
     switch (e_code) {
         case WSOLA:
-            new_effect = new dsp::SOLAPitchShifter(new dsp::WSOLATimeStretcher(), 1);
+            new_effect = new dsp::TimeStretchPitchShifter(new dsp::WSOLATimeStretcher(), 1);
             break;
         case PSOLA:
-            new_effect = new dsp::SOLAPitchShifter(new dsp::PSOLATimeStretcher(), 1);
+            new_effect = new dsp::TimeStretchPitchShifter(new dsp::PSOLATimeStretcher(), 1);
             break;
         case PhaseVocoder:
-            new_effect = new dsp::SOLAPitchShifter(new dsp::PhaseVocoderTimeStretcher(true), 1);
+            new_effect = new dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderTimeStretcher(true), 1);
             break;
         case PhaseVocoderDoneRight:
-            new_effect = new dsp::SOLAPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
+            new_effect = new dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
             break;
         case LPCFormant:
             new_effect = new dsp::LPCFormantShifter();

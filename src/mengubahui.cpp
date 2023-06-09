@@ -12,7 +12,6 @@ using namespace dsp;
 MenugubahUI::MenugubahUI(): 
     Screen(Vector2i(1280, 720)), 
     _pitch_shifters({
-
     }) {}
 
 
