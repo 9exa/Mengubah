@@ -10,7 +10,10 @@ using namespace Mengu;
 using namespace dsp;
 
 MenugubahUI::MenugubahUI(): 
-    Screen(Vector2i(1280, 720)) {}
+    Screen(Vector2i(1280, 720)), 
+    _pitch_shifters({
+
+    }) {}
 
 
 void MenugubahUI::push_signal(const float *input, uint32_t size) {
@@ -30,4 +33,6 @@ void MenugubahUI::push_signal(const float *input, uint32_t size) {
 
 uint32_t MenugubahUI::pop_transformed_signal(float *output, uint32_t size) {
     _transformed_buffer.pop_front_many(output, size);
+    return size;
 }
+

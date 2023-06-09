@@ -1,4 +1,5 @@
 #include "mengupitchy.h"
+#include "audioplayers/Audioplayer.h"
 #include "dsp/effect.h"
 #include "dsp/fft.h"
 #include "gui/effectcontrol.h"
@@ -113,13 +114,14 @@ MenguPitchy::MenguPitchy():
     effect_selection_window->set_visible(false);
     new Label(effect_selection_window, "Select Pitch Shifting Algorithm");
 
-    std::string effect_names[4] = {
+    std::string effect_names[AudioPlayer::NPitchShifters] = {
         "WSOLA Pitch Shifter",
         "PSOLA Pitch Shifter",
         "Phase Vocoder",
         "Phase Vocoder '''Done right'''",
+        "Formant Shifter",
     };
-    for (uint32_t i = 0; i < 4; i++) {
+    for (uint32_t i = 0; i < AudioPlayer::NPitchShifters; i++) {
         std::string effect_name = effect_names[i];
         Button *e_button = new Button(
             effect_selection_window, effect_name

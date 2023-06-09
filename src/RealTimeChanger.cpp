@@ -1,5 +1,6 @@
 #include "RealTimeChanger.h"
 #include "dsp/effect.h"
+#include "dsp/formantshifter.h"
 #include "dsp/pitchshifter.h"
 #include "dsp/timestretcher.h"
 #include "gui/effectcontrol.h"
@@ -46,12 +47,12 @@ Mengu::RealTimeChanger::RealTimeChanger() :
 
     const std::vector<std::string> effect_names = {
         "WSOLA Pitch Shifter",
-        "PSOLA Pitch Shifter",
+        "PSOLA Formant Shifter",
         "Phase Vocoder",
         "Phase Vocoder '''Done right'''",
     };
     _effect_select_combobox = new VComboBox(_root, "Add Effect");
-    _effect_select_combobox->set_items(effect_names);
+    _effect_select_combobox->set_items(std::vector(EffectNames.begin(), EffectNames.end()));
     _effect_select_combobox->set_callback([this] (int ind) {
         _add_effect((EffectCode) ind);
         _effect_select_combobox->close();
@@ -75,7 +76,7 @@ void Mengu::RealTimeChanger::draw_all() {
 }
 
 void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
-    dsp::PitchShifter *new_effect;
+    dsp::Effect *new_effect;
     switch (e_code) {
         case WSOLA:
             new_effect = new dsp::SOLAPitchShifter(new dsp::WSOLATimeStretcher(), 1);
@@ -89,6 +90,8 @@ void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
         case PhaseVocoderDoneRight:
             new_effect = new dsp::SOLAPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
             break;
+        case LPCFormant:
+            new_effect = new dsp::LPCFormantShifter();
     };
 
     capture.add_effect(new_effect);

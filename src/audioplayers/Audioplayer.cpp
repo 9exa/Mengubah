@@ -1,6 +1,7 @@
 #include "Audioplayer.h"
 #include "dsp/common.h"
 #include "dsp/fft.h"
+#include "dsp/formantshifter.h"
 #include "dsp/pitchshifter.h"
 #include "dsp/timestretcher.h"
 #include "extras/miniaudio_split/miniaudio.h"
@@ -23,6 +24,7 @@ Mengu::AudioPlayer::AudioPlayer() {
     pitch_shifters[1] = new Mengu::dsp::SOLAPitchShifter(new dsp::PSOLATimeStretcher, 1);
     pitch_shifters[2] = new Mengu::dsp::SOLAPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
     pitch_shifters[3] = new Mengu::dsp::SOLAPitchShifter(new dsp::PhaseVocoderTimeStretcher(true), 1);
+    pitch_shifters[4] = new Mengu::dsp::LPCFormantShifter();
     // pitch_shifters[2] = new Mengu::dsp::PhaseVocoderPitchShifterV2();
     // pitch_shifter = new Mengu::dsp::PhaseVocoderPitchShifter(BufferSize);
     pitch_shifter = pitch_shifters[0];
@@ -90,10 +92,6 @@ void Mengu::AudioPlayer::stop() {
     }
 
     pitch_shifter->reset();
-}
-
-void Mengu::AudioPlayer::set_shift_factor(float f) {
-    pitch_shifter->set_shift_factor(f);
 }
 
 void Mengu::AudioPlayer::set_pitch_shifter(uint32_t ind) {

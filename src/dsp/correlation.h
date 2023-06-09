@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <complex>
 #include <cstdint>
 #include <vector>
@@ -103,13 +104,16 @@ public:
         // calc envelope
         std::transform(A.cbegin(), A.cend(), _envelope.begin(),
             // try to prevent infs
-            [] (Complex c) { return 1.0f / (sqrt(std::norm(c)) + 0.01f); }
+            [] (Complex c) { return 1.0f / (sqrt(std::norm(c))); }
         );
 
         // calce residuals
-        std::transform(_freq_spectrum.cbegin(), _freq_spectrum.cend(), A.cbegin(), _residuals.begin(),
-            [] (Complex x_val, Complex a_val) { return std::sqrt(std::norm(x_val * a_val)); }
-        );
+        for (uint32_t i = 0; i < SampleSize; i++) {
+            _residuals[i] = std::sqrt(std::norm(_freq_spectrum[i] * A[i]));
+        }
+        // std::transform(_freq_spectrum.cbegin(), _freq_spectrum.cend(), A.cbegin(), _residuals.begin(),
+        //     [] (Complex x_val, Complex a_val) { return std::sqrt(std::norm(x_val * a_val)); }
+        // );
     }
     
     // The dft of the loaded samples

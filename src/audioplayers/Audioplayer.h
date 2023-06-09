@@ -1,6 +1,7 @@
 #ifndef MENGA_AUDIO_PLAYER
 #define MENGA_AUDIO_PLAYER
 
+#include "dsp/effect.h"
 #include "dsp/fft.h"
 #include "miniaudio.h"
 
@@ -22,8 +23,6 @@ public:
 
     void stop();
 
-    void set_shift_factor(float f);
-
     CycleQueue<float> sample_buffer;
 
     CycleQueue<Complex> left_buffer;
@@ -31,9 +30,9 @@ public:
 
     static inline const int32_t BufferSize = 1 << 10;
     
-    dsp::PitchShifter *pitch_shifter;
-    static constexpr uint32_t NPitchShifters = 4;
-    dsp::PitchShifter *pitch_shifters[NPitchShifters];
+    dsp::Effect *pitch_shifter;
+    static constexpr uint32_t NPitchShifters = 5;
+    dsp::Effect *pitch_shifters[NPitchShifters];
 
     void set_pitch_shifter(uint32_t ind);
 

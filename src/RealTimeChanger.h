@@ -30,11 +30,12 @@ private:
     MicrophoneAudioCapture capture;
     LinePlotGPU *_raw_graph;
 
-    static inline const std::array<std::string, 4> EffectNames {
+    static inline const std::array<std::string, 5> EffectNames {
         "WSOLA Pitch Shifter",
         "PSOLA Pitch Shifter",
         "Phase Vocoder",
-        "Phase Vocoder '''Done right'''"
+        "Phase Vocoder '''Done right'''",
+        "LPC Formant Shifter",
     };
 
     enum EffectCode {
@@ -42,6 +43,7 @@ private:
         PSOLA,
         PhaseVocoder,
         PhaseVocoderDoneRight,
+        LPCFormant,
     };
 
     // Used as a proxy for the whole main screen, so we can still have Child Windows moving around

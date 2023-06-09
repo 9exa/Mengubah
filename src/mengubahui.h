@@ -15,9 +15,11 @@
 
 #include <nanogui/screen.h>
 
-using namespace nanogui;
 
 namespace Mengu {
+
+using namespace nanogui;
+using namespace dsp;
 
 class MenugubahUI : public Screen {
 public:
@@ -29,6 +31,9 @@ public:
 private:
     dsp::PitchShifter *_pitch_shifter;
     VecDeque<float> _transformed_buffer;
+
+    const std::vector<Effect *> _pitch_shifters;
+    const std::vector<Effect *> _formant_shifters;
 
     // intermediary buffer
     std::vector<Complex> _cbuffer;

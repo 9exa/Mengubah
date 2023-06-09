@@ -1,3 +1,4 @@
+#include <array>
 #include <complex>
 #include <cstdint>
 #include <nanogui/common.h>
@@ -39,12 +40,19 @@ public:
 
     LinePlotGPU *freq_graph;
     LinePlotGPU *envelope_graph;
+    LinePlotGPU *shifted_freq_graph;
+    LinePlotGPU *shifted_envelope_graph;
     LinePlotGPU *log_freq_graph;
     LinePlotGPU *log_envelope_graph;
+
+    float shift_factor = 1.5;
+
+
 
     TimeStretchAudioPlayer *audio_player;
 
     dsp::LPC<TimeStretchAudioPlayer::BufferSize, 60> lpc;
+    dsp::LPC<TimeStretchAudioPlayer::BufferSize, 60> lpc2;
 
     App() : nanogui::Screen(nanogui::Vector2i(1280, 720), "Recon test")
             {
@@ -65,6 +73,15 @@ public:
         envelope_graph = new LinePlotGPU(this, "Envelope Graph");
         envelope_graph->get_values().resize(TimeStretchAudioPlayer::BufferSize / 2);
         envelope_graph->set_min_value(0);
+
+        shifted_freq_graph = new LinePlotGPU(this, "Shifted Frequency Graph");
+        shifted_freq_graph->get_values().resize(TimeStretchAudioPlayer::BufferSize / 2);
+        shifted_freq_graph->set_min_value(0.0f);
+
+        shifted_envelope_graph = new LinePlotGPU(this, "Shifted Envelope Graph");
+        shifted_envelope_graph->get_values().resize(TimeStretchAudioPlayer::BufferSize / 2);
+        shifted_envelope_graph->set_min_value(0.0f);
+
 
         log_freq_graph = new LinePlotGPU(this, "Log Frequency Graph");
         log_freq_graph->get_values().resize(TimeStretchAudioPlayer::BufferSize / 2);
@@ -109,6 +126,12 @@ public:
 
         });
 
+        Slider *shift_slider = new Slider(this);
+        shift_slider->set_callback([this] (float v) {
+            shift_factor = v;
+        });
+        shift_slider->set_range({0.5, 2.0});
+
         perform_layout();
 
     }
@@ -116,6 +139,49 @@ public:
     ~App() {
         if (audio_player != nullptr) {
             delete audio_player;
+        }
+    }
+    
+    static void shift_by_env(const Complex *input, 
+                            Complex *output, 
+                            const float *envelope, 
+                            const uint32_t size, 
+                            const float shift_factor) {
+        
+        for (uint32_t i = 0; i < size; i++) {
+            uint32_t shifted_ind = shift_factor * i;
+            if (shifted_ind < size) {
+                float correction = envelope[shifted_ind] / envelope[i];
+                output[i] = correction * input[i];
+            }
+            else {
+                output[i] = input[size - 1];
+            }
+        }
+    }
+
+    // shift the envelope of a lpc frequency spectrum then 
+    static void _reconstruct_freq(const float *residuals, 
+                                const float *envelope, 
+                                const float *mags,
+                                const float *phases,
+                                Complex *output, 
+                                const uint32_t size, 
+                                const float env_shift_factor) {
+        float envelope_max = 0.0f;
+        float residual_max = 0.0f;
+        float mag_max = 0.0f;
+        for (uint32_t i = 0; i < size; i++) {
+            envelope_max = MAX(envelope_max, envelope[i]);
+            residual_max = MAX(residual_max, residuals[i]);
+            mag_max = MAX(mag_max, mags[i]);
+        }
+
+        for (uint32_t i = 0; i < size; i++) {
+            uint32_t shifted_ind = env_shift_factor * i;
+            float env_mag = shifted_ind < size ? envelope[shifted_ind] : envelope[i];
+            float new_mag = mag_max * residuals[i] / residual_max * env_mag / envelope_max;
+            output[i] = std::polar(new_mag, phases[i]);
         }
     }
 
@@ -126,15 +192,36 @@ public:
 
         const auto &freqs = lpc.get_freq_spectrum();
         const auto &envelope = lpc.get_envelope();
-        
+        const auto &residuals = lpc.get_residuals();
+
+        std::array<float, TimeStretchAudioPlayer::BufferSize / 2> mags;
+        std::array<float, TimeStretchAudioPlayer::BufferSize / 2> phases;
+
         float envelope_max = 0.0f;
         for (uint32_t i = 0; i < TimeStretchAudioPlayer::BufferSize / 2; i++) {
             if (envelope_max < envelope[i]) envelope_max = envelope[i];
+            mags[i] = std::sqrt(std::norm(freqs[i]));
+            phases[i] = std::arg(freqs[i]);
         }
+
+        Complex shifted_freq[TimeStretchAudioPlayer::BufferSize] = {0};
+        Complex shifted_samples[TimeStretchAudioPlayer::BufferSize] = {0};
+        // float shifted_envelope[TimeStretchAudioPlayer::BufferSize];
         
+        // shift_by_env(freqs.data(), shifted_freq, envelope.data(), TimeStretchAudioPlayer::BufferSize / 2, shift_factor);
+        _reconstruct_freq(residuals.data(), envelope.data(), mags.data(), phases.data(), shifted_freq, TimeStretchAudioPlayer::BufferSize / 2, shift_factor);
+        lpc.get_fft().inverse_transform(shifted_freq, shifted_samples);
+
+        lpc2.load_sample(shifted_samples);
+        auto &shifted_envelope = lpc2.get_envelope();
+
         for (uint32_t i = 0; i < TimeStretchAudioPlayer::BufferSize / 2; i++) {
-            freq_graph->get_values()[i] = std::sqrt(std::norm(freqs[i]));
+            freq_graph->get_values()[i] = residuals[i] * envelope[i];
             envelope_graph->get_values()[i] = envelope[i] / envelope_max;
+
+            shifted_freq_graph->get_values()[i] = std::sqrt(std::norm(shifted_freq[i]));
+            shifted_envelope_graph->get_values()[i] = shifted_envelope[i] / envelope_max;
+
             log_freq_graph->get_values()[i] = 20.*std::log10(std::sqrt(std::norm(freqs[i])));
             log_envelope_graph->get_values()[i] = 20.*std::log10(envelope[i] / envelope_max);
         }
