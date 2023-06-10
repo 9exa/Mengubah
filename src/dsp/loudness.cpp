@@ -21,9 +21,12 @@
 
 #define LUFS_DEFAULT_SAMPLE_RATE 48000
 
-float LUFS_freq(Complex *freqs, uint32_t size, uint32_t sample_rate) {
+using namespace Mengu;
+using namespace dsp;
+
+float Mengu::dsp::LUFS_freq(Complex *freqs, uint32_t size, uint32_t sample_rate) {
     // Adjust to the custum sample rate
-    float sample_rate_correction = (float) sample_rate / LUFS_DEFAULT_SAMPLE_RATE;
+    float sample_rate_correction = (float) sample_rate / LUFS_DEFAULT_SAMPLE_RATE * 2;
 
     float total_amp2 = 0.0f; // total squared amplitude of each freq bin
     for (uint32_t i = 0; i < size; i++) {
@@ -40,4 +43,20 @@ float LUFS_freq(Complex *freqs, uint32_t size, uint32_t sample_rate) {
 
     return -0.691 + 10 * Mengu::log10(total_amp2 / size);
 
+}
+
+Complex Mengu::dsp::LUFS_filter_transfer(float freq) {
+    float omega = (float) MATH_PI  * freq / LUFS_DEFAULT_SAMPLE_RATE * 2;
+    Complex z = std::polar(1.0f, omega);
+    Complex y = quad_filter_trans(z, S1_A1, S1_A2, S1_B0, S1_B1, S1_B2);
+    return y * quad_filter_trans(z, S2_A1, S2_A2, S2_B0, S2_B1, S2_B2);
+}
+
+LUFSFilter::LUFSFilter(): 
+    _high_shelf_filter(S1_A1, S1_A2, S1_B0, S1_B1, S1_B2),
+    _high_pass_filter(S2_A1, S2_A2, S2_B0, S2_B1, S2_B2) {}
+
+void LUFSFilter::transform(const float *input, float *output, uint32_t size) {
+    _high_shelf_filter.transform(input, output, size);
+    _high_pass_filter.transform(input, output, size);
 }

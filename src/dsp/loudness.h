@@ -13,12 +13,35 @@
 #define MENGU_LOUDNESS
 
 #include "dsp/common.h"
+#include "dsp/filter.h"
 #include <cstdint>
 #include <stdint.h>
 
-// Loudness Units relative to Full Scale in the frequency domain
+namespace Mengu {
+namespace dsp {
+
+// Loudness Units relative to Full Scale of a sample in the frequency domain
 // first (positive) half of the frequency spectrum only
 // Only supports 1 channel
 float LUFS_freq(Complex *freqs, uint32_t size, uint32_t sample_rate = 48000);
+
+// The value of the transfer function associated with the described frequency bin
+Complex LUFS_filter_transfer(float freq);
+
+// Performs the filter step associated with LUFS
+class LUFSFilter {
+public:
+    LUFSFilter();
+
+    void transform(const float *input, float *output, uint32_t size);
+
+private:
+    BiquadFilter _high_shelf_filter; // Stage 1 filter
+    BiquadFilter _high_pass_filter; // Stage 2 filter
+};
+
+}
+}
+
 
 #endif

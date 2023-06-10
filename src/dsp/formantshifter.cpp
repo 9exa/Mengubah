@@ -3,49 +3,27 @@
 #include "dsp/formantshifter.h"
 #include "dsp/common.h"
 #include "dsp/effect.h"
+#include "dsp/interpolation.h"
+#include "dsp/loudness.h"
 #include "mengumath.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <complex>
 #include <cstdint>
 
 using namespace Mengu;
 using namespace dsp;
 
-// rescale an array in the freqency domain by the shape of an envelope if it were to be shifted up or down
-template<typename T>
-static void _shift_by_env(const T *input, 
-                          T *output, 
-                          const float *envelope, 
-                          const uint32_t size, 
-                          const float shift_factor) {
-    for (uint32_t i = 0; i < size; i++) {
-        uint32_t shifted_ind =  i / shift_factor;
-        if (shifted_ind < size) {
-            float correction = envelope[i] != 0.0f ? envelope[shifted_ind] / envelope[i] : 0.0f;
-            output[i] = correction * input[i];
-        }
-        else {
-            // output[i] = input[size - 1];
-            output[i] = Complex(0.0f);
-        }
+
+
+LPCFormantShifter::LPCFormantShifter() {
+    for (uint32_t i = 0; i < ProcSize / 2; i++) {
+        float f = i * (float) ProcSize / AssumedSampleRate;
+        _LUFS_coeffs[i] = LUFS_filter_transfer(f);
     }
+    _transformed_buffer.resize(OverlapSize);
 }
-
-// shift the envelope of a lpc frequency spectrum then 
-void LPCFormantShifter::_reconstruct_freq(const float *residuals, 
-                                const float *envelope, 
-                                const float *phases,
-                                Complex *output, 
-                                const float env_shift_factor) {
-
-        for (uint32_t i = 0; i < ProcSize / 2; i++) {
-            uint32_t shifted_ind =  i / env_shift_factor;
-            float env_mag = shifted_ind < ProcSize / 2 ? envelope[shifted_ind] : envelope[i];
-            float new_mag = residuals[i] * env_mag;
-            output[i] = std::polar(new_mag, phases[i]);
-        }
-    }
 
 Effect::InputDomain LPCFormantShifter::get_input_domain() {
     return InputDomain::Time;
@@ -58,57 +36,44 @@ void LPCFormantShifter::push_signal(const Complex *input, const uint32_t &size) 
 }
 
 // Last value of transformed signal
-uint32_t LPCFormantShifter::pop_transformed_signal(Complex *output, const uint32_t &size) {
-    uint32_t size_remaining = size;
-    
+uint32_t LPCFormantShifter::pop_transformed_signal(Complex *output, const uint32_t &size) {    
     std::array<Complex, ProcSize> freq_shifted {0};
     std::array<Complex, ProcSize> samples {0};
-    
-    
-    while (size_remaining > 0) {
-        uint32_t size_this_loop = MIN(ProcSize, size_remaining);
+    std::array<Complex, ProcSize> shifted_samples {0};
+
+    while (_raw_buffer.size() >= ProcSize && _transformed_buffer.size() < size + OverlapSize) {
         
         // Load sample segment. 0 unused frames
-        _raw_buffer.pop_front_many(samples.data(), size_this_loop);
-        for (uint32_t i = size_this_loop; i < ProcSize; i++) {
-            samples[i] = 0.0;
-        }
+        _raw_buffer.to_array(samples.data(), ProcSize);
 
         // do the shifty
         _lpc.load_sample(samples.data());
-        auto &freqs = _lpc.get_freq_spectrum();
         _shift_by_env(
             _lpc.get_freq_spectrum().data(), 
             freq_shifted.data(), 
             _lpc.get_envelope().data(),
-            ProcSize / 2, 
             _shift_factor
         );
-        float phases[ProcSize / 2];
-        for (uint32_t i = 0; i < ProcSize / 2; i++) {
-            phases[i] = std::arg(freqs[i]);
-        }
-        // _reconstruct_freq(
-        //     _lpc.get_residuals().data(), 
-        //     _lpc.get_envelope().data(), 
-        //     phases, 
-        //     freq_shifted.data(), 
-        //     _shift_factor
-        // );
+        _lpc.get_fft().inverse_transform(freq_shifted.data(), shifted_samples.data());
 
-
-        _lpc.get_fft().inverse_transform(freq_shifted.data(), samples.data());
+        // Make downward shifts not quieter and upward shifts not louder
+        // Automatically adjusts for the fact that only half of the frequency spectrum is used
+        _rescale_shifted_freqs(samples.data(), shifted_samples.data());
 
         // copy to output
-        for (uint32_t i = 0; i < size_this_loop; i++) {
-            output[size - size_remaining + i] = (2.0f * samples[i]); // 4? sqrt?
-        }
+        mix_and_extend(_transformed_buffer, shifted_samples, OverlapSize, hamming_window);
 
-        size_remaining -= size_this_loop;
+        _raw_buffer.pop_front_many(nullptr, HopSize);
 
     }
 
-    return size;
+    if (_transformed_buffer.size() < size + OverlapSize) {
+        // Not enough samples to output anything
+        return 0;
+    }
+    else {
+        return _transformed_buffer.pop_front_many(output, size);
+    }
 }
 
 // number of samples that can be output given the current pushed signals of the Effect
@@ -149,6 +114,7 @@ void LPCFormantShifter::set_property(uint32_t id, EffectPropPayload data) {
     }
 }
 
+
 // Gets the value of a property with the specified id
 EffectPropPayload LPCFormantShifter::get_property(uint32_t id) const {
     return EffectPropPayload {
@@ -157,5 +123,69 @@ EffectPropPayload LPCFormantShifter::get_property(uint32_t id) const {
     };
 };
 
+// rescale an array in the freqency domain by the shape of an envelope if it were to be shifted up or down
+void LPCFormantShifter::_shift_by_env(const Complex *input, 
+                          Complex *output, 
+                          const float *envelope, 
+                          const float shift_factor) {
+    // Calculate the Loudness (in LUFS) as we do the shift so we can correct it afterward
 
+    for (uint32_t i = 0; i < ProcSize / 2; i++) {
+        uint32_t shifted_ind =  i / shift_factor;
+        if (shifted_ind < ProcSize / 2) {
+            float correction = envelope[shifted_ind] / envelope[i];
+            if (!std::isfinite(correction)) {
+                output[i] = Complex(0.0f);
+            }
+            else {
+                output[i] = correction * input[i];
+            }
+        }
+        else {
+            // output[i] = input[size - 1];
+            output[i] = Complex(0.0f);
+        }
+    }
+
+    // float correction = sqrt(input_amp2 / shifted_amp2);
+
+    // for (uint32_t i = 0; i < ProcSize / 2; i++) {
+    //     output[i] *= correction;
+    // }
+
+
+}
+
+void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample) {
+    float filtered_raw[ProcSize];
+    float filtered_shifted[ProcSize];
+    for (uint32_t i = 0; i < ProcSize; i++) {
+        filtered_raw[i] = raw_sample[i].real();
+        filtered_shifted[i] = shifted_sample[i].real();
+    }
+
+    // perform filter
+    _raw_sample_filter.transform(filtered_raw, filtered_raw, ProcSize);
+    _shifted_sample_filter.transform(filtered_shifted, filtered_shifted, ProcSize);
+
+    // Get the (unormalized) power of each filtered sample
+    float raw_power, shifted_power = 0.0f;
+    for(uint32_t i = 0; i < ProcSize; i++) {
+        raw_power += filtered_raw[i] * filtered_raw[i];
+        shifted_power += filtered_shifted[i] * filtered_shifted[i];
+    }
+
+    if (shifted_power == 0.0f) {
+        // abort if the shifted signal was empty
+        return;
+    }
+    else {
+        // otherwise scale the shifted by the correction
+        float correction = sqrt(raw_power / shifted_power);
+        for (uint32_t i = 0; i < ProcSize; i++) {
+            shifted_sample[i] *= correction;
+        }
+    }
+    
+}
  

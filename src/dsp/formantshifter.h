@@ -11,7 +11,9 @@
 #include "dsp/common.h"
 #include "dsp/correlation.h"
 #include "dsp/effect.h"
+#include "dsp/loudness.h"
 #include "templates/vecdeque.h"
+#include <cstdint>
 
 namespace Mengu {
 namespace dsp {
@@ -19,6 +21,7 @@ namespace dsp {
 // shifts formants using lpc envelope estimation
 class LPCFormantShifter: public Effect {
 public:
+    LPCFormantShifter();
     // tells an EffectChain what type of input the effect expects
     virtual InputDomain get_input_domain() override;
 
@@ -45,17 +48,31 @@ public:
     virtual EffectPropPayload get_property(uint32_t id) const override;
 private:
     VecDeque<Complex> _raw_buffer;
+    VecDeque<Complex> _transformed_buffer;
 
     static constexpr uint32_t ProcSize = 1 << 10;
+    static constexpr uint32_t HopSize = ProcSize * 3 / 5;
+    static constexpr uint32_t OverlapSize = ProcSize - HopSize;
+
     LPC<ProcSize, 50> _lpc;
 
-    static void _reconstruct_freq(const float *residuals, 
-                                const float *envelope, 
-                                const float *phases,
-                                Complex *output, 
-                                const float env_shift_factor);
+    void _shift_by_env(const Complex *input, 
+                          Complex *output, 
+                          const float *envelope, 
+                          const float shift_factor);
 
+
+    // Amplifies the formant_shifted samples so they have the same LUFS loudness as the raw_sample
+    void _rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample);
     float _shift_factor = 1.0f;
+    
+    static constexpr uint32_t AssumedSampleRate = 44100;
+
+    // cache the coefficents that result from the filters in LUFS calculation
+    Complex _LUFS_coeffs[ProcSize];
+
+    LUFSFilter _raw_sample_filter;
+    LUFSFilter _shifted_sample_filter;
 };
 
 }
