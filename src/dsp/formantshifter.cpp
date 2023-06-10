@@ -22,11 +22,12 @@ static void _shift_by_env(const T *input,
     for (uint32_t i = 0; i < size; i++) {
         uint32_t shifted_ind =  i / shift_factor;
         if (shifted_ind < size) {
-            float correction = envelope[shifted_ind] / envelope[i];
+            float correction = envelope[i] != 0.0f ? envelope[shifted_ind] / envelope[i] : 0.0f;
             output[i] = correction * input[i];
         }
         else {
-            output[i] = input[size - 1];;
+            // output[i] = input[size - 1];
+            output[i] = Complex(0.0f);
         }
     }
 }

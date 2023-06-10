@@ -102,21 +102,12 @@ void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
     EffectControl *effect_control;
     if (_effect_controls.size() <= e_ind) {
         effect_control = new EffectControl(_effect_control_container);
-        effect_control->set_effect_name(EffectNames[e_code]);
         effect_control->set_callback([this, e_ind] (uint32_t ind, dsp::EffectPropPayload data) {
             capture.get_effects()[e_ind]->set_property(ind, data);
         });
         effect_control->set_delete_button_enabled(true);
-        effect_control->set_delete_button_callback([this, effect_control] () {
-            const auto effect_iter = std::find(
-                _effect_controls.cbegin(),
-                _effect_controls.cend(),
-                effect_control
-            );
-            if (effect_iter != _effect_controls.cend()) {
-                const uint32_t ind = effect_iter - _effect_controls.cbegin();
-                _remove_effect(ind);
-            }
+        effect_control->set_delete_button_callback([this, e_ind] () {
+            _remove_effect(e_ind);
         });
         _effect_controls.push_back(effect_control);
     }
@@ -124,6 +115,7 @@ void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
         effect_control = _effect_controls[e_ind];
         effect_control->set_visible(true);
     }
+    effect_control->set_effect_name(EffectNames[e_code]);
     effect_control->display_property_list(new_effect->get_property_descs());
 
     perform_layout();
@@ -132,10 +124,16 @@ void Mengu::RealTimeChanger::_add_effect(EffectCode e_code) {
 void Mengu::RealTimeChanger::_remove_effect(uint32_t at) {
     capture.remove_effect(at);
     // update the effect controls
+
     const std::vector<Effect *> &effects = capture.get_effects();
     for (uint32_t i = 0; i < effects.size(); i++) {
         _effect_controls[i]->display_property_list(effects[i]->get_property_descs());
     }
+    // rename the existing controls
+    for (uint32_t i = at; i < effects.size(); i++) {
+        _effect_controls[i]->set_effect_name(_effect_controls[i+1]->get_effect_name());
+    }
+
     _effect_controls[effects.size()]->set_visible(false);
     perform_layout();
 }

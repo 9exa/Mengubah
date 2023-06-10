@@ -30,9 +30,6 @@ MicrophoneAudioCapture::MicrophoneAudioCapture() {
         throw std::runtime_error("Could not get devices");
     }
 
-    // for (ma_uint32 i = 0; i < playbackCount; i++ ){
-    //     std::cout <<  i << ". " << pPlaybackInfos[i].name << std::endl;
-    // }
 
     _ddata = {this};
     // ma_device_info capture_info =pCaptureInfos[1];
@@ -53,12 +50,6 @@ MicrophoneAudioCapture::MicrophoneAudioCapture() {
     ma_device_start(&_device);
 
     raw_bufferf.resize(1<<12);
-
-
-    // _pitch_shifters[0] = new dsp::TimeStretchPitchShifter(new dsp::WSOLATimeStretcher(), _device.capture.channels);
-    // _pitch_shifters[0] = new dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(), _device.capture.channels);
-    // _pitch_shifters[1] = new dsp::TimeStretchPitchShifter(new dsp::PSOLATimeStretcher(), _device.capture.channels);
-
 }
 
 MicrophoneAudioCapture::~MicrophoneAudioCapture() {
