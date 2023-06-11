@@ -10,6 +10,7 @@
  */
 #include "dsp/effect.h"
 #include "gui/effectcontrol.h"
+#include "gui/inputslider.h"
 #include "nanogui/button.h"
 #include "nanogui/common.h"
 #include "nanogui/label.h"
@@ -58,7 +59,7 @@ EffectControl::EffectControl(Widget *parent, const std::string &effect_name) :
     header_layout->set_col_stretch(1, 1);
     _delete_button->set_visible(false);
 
-    _clear_properties();    
+    // _clear_properties();    
 }
 
 void EffectControl::set_callback(const std::function<void (uint32_t id, EffectPropPayload data)> &callback) {
@@ -109,7 +110,8 @@ Widget *EffectControl::_create_prop_widget(Widget *parent, uint32_t ind, const E
         case Slider:
         case Knob:
         case Counter: {
-            nanogui::Slider *effect_slider = new nanogui::Slider(parent);
+            // nanogui::Slider *effect_slider = new nanogui::Slider(parent);
+            InputSlider *effect_slider = new InputSlider(parent);
             std::function<void (float)> callback;
             switch (prop_desc.slider_data.scale) {
                 case Linear:
@@ -149,10 +151,10 @@ void EffectControl::_add_property(uint32_t ind, const EffectPropDesc &prop_desc)
     AdvancedGridLayout *container_layout = (AdvancedGridLayout*) _property_widgets_container->layout();
     int row_num = _property_widgets_container->child_count() / 2 - 1;
     if (row_num >= container_layout->row_count() || true) {
-        container_layout->append_row(30);
+        container_layout->append_row(50);
     }
     using Anchor = AdvancedGridLayout::Anchor;
-    container_layout->set_anchor(prop_label, Anchor(0, row_num));
+    container_layout->set_anchor(prop_label, Anchor(0, row_num, Alignment::Middle));
     container_layout->set_anchor(prop_widget, Anchor(1, row_num));
 
 }
@@ -162,7 +164,7 @@ void EffectControl::_clear_properties() {
         remove_child(_property_widgets_container);
     }
     _property_widgets_container = new Widget(this);
-    AdvancedGridLayout *container_layout = new AdvancedGridLayout( {150, 0}, {}, 5);
+    AdvancedGridLayout *container_layout = new AdvancedGridLayout( {100, 300}, {}, 5);
     container_layout->set_col_stretch(1, 1.0f);
     _property_widgets_container->set_layout(container_layout);
     

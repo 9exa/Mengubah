@@ -14,9 +14,7 @@
 #include "nanogui/vector.h"
 #include "nanogui/widget.h"
 #include <algorithm>
-#include <cstdint>
 #include <iostream>
-#include <math.h>
 #include <vector>
 
 

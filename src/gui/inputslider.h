@@ -35,7 +35,7 @@ public:
 
 
 protected:
-    Slider *_slider;
+    nanogui::Slider *_slider; // need to specify nanogui:: here because Slider is an identifier used in Effect.h, which may be #included with this file
     FloatBox<float> *_input_box;
 
     std::function<void (float)> _callback;

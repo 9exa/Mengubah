@@ -18,6 +18,7 @@ InputSlider::InputSlider(Widget *parent): Widget(parent) {
         }
     });
     _input_box->set_editable(true);
+    _input_box->number_format("%.2f");
 
     _slider = new Slider(this);
     _slider->set_callback([this] (float value) {
@@ -28,8 +29,9 @@ InputSlider::InputSlider(Widget *parent): Widget(parent) {
             _callback(value);
         }
     });
+
     using Anchor = AdvancedGridLayout::Anchor;
-    AdvancedGridLayout *layout = new AdvancedGridLayout({100, 0}, {40});
+    AdvancedGridLayout *layout = new AdvancedGridLayout({80, 50}, {40});
     layout->set_col_stretch(1, 1.0f);
     layout->set_anchor(_input_box, Anchor(0, 0));
     layout->set_anchor(_slider, Anchor(1, 0));
