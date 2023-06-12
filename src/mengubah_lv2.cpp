@@ -1,32 +1,50 @@
 #include <cstdint>
 #include <lv2.h>
-#include <vector>
+#include <array>
 
-#include "audioplayers/Audioplayer.h"
 #include "dsp/common.h"
 #include "dsp/effect.h"
 #include "dsp/pitchshifter.h"
+#include "dsp/formantshifter.h"
 #include "dsp/timestretcher.h"
+
 
 
 using namespace Mengu;
 using namespace dsp;
 
 struct PluginHandler {
-    std::vector<Effect *> effects;
-    float *in_buffer;
+    std::array<PitchShifter *, 3> pitch_shifters;
+    std::array<Effect *, 2> formant_shifters;
+    const float *in_buffer;
     float *out_buffer;
-    float *pitch_shift;
+    const float *pitch_shifter_ind;
+    const float *pitch_shift;
+    const float *formant_shifter_ind;
+    const float *formant_shift;
+};
+
+enum PitchShiftInd {
+    WSOLAPitch = 0,
+    PhaseVocoderPitch = 1,
+    PhaseVocoderDoneRightPitch = 2,
+};
+enum FormantShiftInd {
+    LPCFormant = 0,
+    PSOLAFormant = 1,
 };
 
 /* internal core methods */
 static LV2_Handle instantiate (const struct LV2_Descriptor *descriptor, double sample_rate, const char *bundle_path, const LV2_Feature *const *features) {
     PluginHandler *plugin = new PluginHandler;
-    plugin->effects = {
+    plugin->pitch_shifters = {
         new TimeStretchPitchShifter(new WSOLATimeStretcher(), 1),
+        new TimeStretchPitchShifter(new PhaseVocoderTimeStretcher(), 1),
+        new TimeStretchPitchShifter(new PhaseVocoderDoneRightTimeStretcher(), 1),
+    };
+    plugin->formant_shifters = {
+        new LPCFormantShifter(),
         new TimeStretchPitchShifter(new PSOLATimeStretcher(), 1),
-        new TimeStretchPitchShifter(new PhaseVocoderTimeStretcher(true), 1),
-        new TimeStretchPitchShifter(new PhaseVocoderDoneRightTimeStretcher(true), 1),
     };
 
     return plugin;
@@ -39,15 +57,26 @@ static void connect_port (LV2_Handle instance, uint32_t port, void *data_locatio
     switch (port)
     {
     case 0:
-        plugin->in_buffer = (float*) data_location;
+        plugin->in_buffer = (const float*) data_location;
         break;
-
+    
     case 1:
         plugin->out_buffer = (float*) data_location;
         break;
 
     case 2:
-        plugin->pitch_shift = (float*) data_location;
+        plugin->pitch_shifter_ind = (const float*) data_location;
+
+    case 3:
+        plugin->pitch_shift = (const float*) data_location;
+        break;
+    
+    case 4:
+        plugin->formant_shifter_ind = (const float*) data_location;
+        break;
+
+    case 5:
+        plugin->formant_shift = (const float*) data_location;
         break;
     
     default:
@@ -66,12 +95,17 @@ static void run (LV2_Handle instance, uint32_t sample_count)
     if (plugin == nullptr) return;
     if ((!plugin->in_buffer) || (!plugin->out_buffer) || (!plugin->pitch_shift)) return;
 
-    Effect *effect = plugin->effects[0];
-    effect->set_property(
-        0, 
-        EffectPropPayload {
-            .type = Slider,
-            .value = *(plugin->pitch_shift),
+    // apply effects
+    Effect *pitch_shifter = plugin->pitch_shifters[static_cast<PitchShiftInd>(*plugin->pitch_shifter_ind)];
+    Effect *formant_shifter = plugin->formant_shifters[static_cast<FormantShiftInd>(*plugin->formant_shifter_ind)];
+
+    pitch_shifter->set_property(0, EffectPropPayload {
+        .type = Slider,
+        .value = *plugin->pitch_shift,
+    });
+    formant_shifter->set_property(0, EffectPropPayload {
+        .type = Slider,
+        .value = *plugin->formant_shift,
     });
 
     Complex *cbuffer = new Complex[sample_count];
@@ -79,18 +113,17 @@ static void run (LV2_Handle instance, uint32_t sample_count)
         cbuffer[i] = (Complex) plugin->in_buffer[i];
     }
 
-    effect->push_signal(cbuffer, sample_count);
-    effect->pop_transformed_signal(cbuffer, sample_count);
+    formant_shifter->push_signal(cbuffer, sample_count);
+    formant_shifter->pop_transformed_signal(cbuffer, sample_count);
+
+    pitch_shifter->push_signal(cbuffer, sample_count);
+    pitch_shifter->pop_transformed_signal(cbuffer, sample_count);
 
     for (uint32_t i = 0; i < sample_count; i++) {
         plugin->out_buffer[i] = cbuffer[i].real();
     }
 
     delete[] cbuffer;
-
-    // for(uint32_t i = 0; i < sample_count; i++) {
-    //     plugin->out_buffer[i] = plugin->in_buffer[i];
-    // }
 }
 
 static void deactivate (LV2_Handle instance)
@@ -104,8 +137,12 @@ static void cleanup (LV2_Handle instance) {
         return;
     }
 
-    for (auto effect: plugin->effects) {
-        delete effect;
+    for (auto pitch_shifter: plugin->pitch_shifters) {
+        delete pitch_shifter;
+    }
+
+    for (auto formant_shifter: plugin->formant_shifters) {
+        delete formant_shifter;
     }
 
     delete plugin;

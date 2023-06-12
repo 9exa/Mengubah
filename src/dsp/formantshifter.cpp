@@ -18,10 +18,6 @@ using namespace dsp;
 
 
 LPCFormantShifter::LPCFormantShifter() {
-    for (uint32_t i = 0; i < ProcSize / 2; i++) {
-        float f = i * (float) ProcSize / AssumedSampleRate;
-        _LUFS_coeffs[i] = LUFS_filter_transfer(f);
-    }
     _transformed_buffer.resize(OverlapSize);
 }
 

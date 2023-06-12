@@ -50,11 +50,11 @@ private:
     VecDeque<Complex> _raw_buffer;
     VecDeque<Complex> _transformed_buffer;
 
-    static constexpr uint32_t ProcSize = 1 << 10;
+    static constexpr uint32_t ProcSize = 1 << 9;
     static constexpr uint32_t HopSize = ProcSize * 3 / 5;
     static constexpr uint32_t OverlapSize = ProcSize - HopSize;
 
-    LPC<ProcSize, 50> _lpc;
+    LPC<ProcSize, 25> _lpc;
 
     void _shift_by_env(const Complex *input, 
                           Complex *output, 
@@ -65,8 +65,6 @@ private:
     // Amplifies the formant_shifted samples so they have the same LUFS loudness as the raw_sample
     void _rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample);
     float _shift_factor = 1.0f;
-    
-    static constexpr uint32_t AssumedSampleRate = 44100;
 
     // cache the coefficents that result from the filters in LUFS calculation
     Complex _LUFS_coeffs[ProcSize];
