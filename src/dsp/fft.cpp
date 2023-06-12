@@ -49,63 +49,65 @@ dsp::FFT::FFT(uint32_t size) {
     for (uint32_t i = 0; i < _fft_size; i++) {
         _es[i] = std::polar(1.0f, -(float) MATH_TAU * i / _fft_size);
     }
-    // const float base_root = -MATH_TAU / _fft_size;
-    // float angle = MATH_PI;
-    // for (uint32_t i = 0; i < _fft_size; i++) {
-    //     angle += base_root;
-    //     _es[(i + 1 + ( _fft_size / 2)) % _fft_size] = Complex(std::cos(angle), std::sin(angle));
-    //     //std::cout << angle << " " << Complex(dsp::cos(angle),  dsp::sin(angle)) << std::endl;
-    // }
+    _inp_vec = new Complex[_fft_size];
+    _out_vec = new Complex[_fft_size];
 }
 
 dsp::FFT::~FFT() {
     delete[] _es;
+    delete[] _inp_vec;
+    delete[] _out_vec;
 }
 
 void dsp::FFT::transform(const Complex *input, Complex *output) const {
-
-    std::vector<Complex> inp_vec(_fft_size);
-    std::vector<Complex> out_vec(_fft_size);
     for (uint32_t i = 0; i < _size; i++) {
-        inp_vec[i] = input[i];
+        _inp_vec[i] = input[i];
+    }
+    for (uint32_t i = _size; i < _fft_size; i++) {
+        _inp_vec[i] = Complex(0.0f);
     }
 
-    _transform_rec(inp_vec.data(), out_vec.data(), _fft_size, 1);
+    _transform_rec(_inp_vec, _out_vec, _fft_size, 1);
 
     for (uint32_t i = 0; i < _size; i++) {
-        output[i] = out_vec[i] / sqrtf((float) _fft_size);
+        output[i] = _out_vec[i] / sqrtf((float) _fft_size);
     }
 }
 
 void dsp::FFT::transform(const CycleQueue<Complex>&input, Complex *output) const {
     // _transform_rec(input, 0, output, _size, 1);
-    std::vector<Complex> inp_vec = input.to_vector();
-    std::vector<Complex> out_vec(_fft_size);
+    input.to_array(_inp_vec);
+
     // zero pad the  input
-    inp_vec.resize(_fft_size, 0);
+    for (uint32_t i = input.size(); i < _fft_size; i++) {
+        _inp_vec[i] = 0.0f;
+    }
     
 
-    _transform_rec(inp_vec.data(), out_vec.data(), _fft_size, 1);
+    _transform_rec(_inp_vec, _out_vec, _fft_size, 1);
     for (uint32_t i = 0; i < _size / 2; i++) {
-        output[i] = out_vec[i] / sqrtf((float) _fft_size);
+        output[i] = _out_vec[i] / sqrtf((float) _fft_size);
     }
 }
 
 void dsp::FFT::inverse_transform(const Complex *input, Complex *output) const {
 
-    std::vector<Complex> inp_vec(_fft_size);
-    std::vector<Complex> out_vec(_fft_size);
-    for (uint32_t i = 0; i < _size; i++)
-        inp_vec[i] = input[i];
+    for (uint32_t i = 0; i < _size; i++) {
+        _inp_vec[i] = input[i];
+    }
+    // zero pad input buffer
+    for (uint32_t i = _size; i < _fft_size; i++) {
+        _inp_vec[i] = 0.0f;
+    }
 
 
-    conjugate_arr(inp_vec.data(), _size);
-    _transform_rec(inp_vec.data(), out_vec.data(), _fft_size, 1);
-    conjugate_arr(out_vec.data(), _size);
+    conjugate_arr(_inp_vec, _size);
+    _transform_rec(_inp_vec, _out_vec, _fft_size, 1);
+    conjugate_arr(_out_vec, _size);
 
     for (uint32_t i = 0; i < _size; i++) {
         // only inverse-transforming first half of the freq spectrum. so multiply by 2
-        output[i] = out_vec[i] / sqrtf((float) _fft_size);
+        output[i] = _out_vec[i] / sqrtf((float) _fft_size);
     }
 }
 

@@ -146,7 +146,7 @@ private:
     static constexpr uint32_t SampleProcSize = 1 << 11;
 
     // length of a window
-    static constexpr uint32_t WindowSize = 1 << 10;
+    static constexpr uint32_t WindowSize = 1 << 9;
 
     // stretches the sample, and adds it to the transform buffer, tje position of each window is based on the autocorrelation
     // returns how many frames were used and can be discarded
@@ -187,8 +187,8 @@ private:
 
     static constexpr uint32_t InputSampleRate = 44100;
 
-    static constexpr uint32_t MinFreqInd = MinFreqHz * SampleProcSize / InputSampleRate; 
-    static constexpr uint32_t MaxFreqInd = MaxFreqHz * SampleProcSize / InputSampleRate; 
+    static constexpr uint32_t MinFreqInd = MAX(MinFreqHz * SampleProcSize / InputSampleRate, 2); 
+    static constexpr uint32_t MaxFreqInd = MAX(MaxFreqHz * SampleProcSize / InputSampleRate, MinFreqInd * 2); 
 
     // the amount of frames in _transformed_buffer that need to remain in case of overlapping future samples
     static constexpr uint32_t MaxBackWindowOverlap = (1.0f / MinFreqHz * InputSampleRate) + 1;

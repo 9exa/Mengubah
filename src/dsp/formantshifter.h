@@ -50,11 +50,11 @@ private:
     VecDeque<Complex> _raw_buffer;
     VecDeque<Complex> _transformed_buffer;
 
-    static constexpr uint32_t ProcSize = 1 << 9;
-    static constexpr uint32_t HopSize = ProcSize * 3 / 5;
+    static constexpr uint32_t ProcSize = 1 << 11;
+    static constexpr uint32_t HopSize = ProcSize * 4 / 5;
     static constexpr uint32_t OverlapSize = ProcSize - HopSize;
 
-    LPC<ProcSize, 25> _lpc;
+    LPC<ProcSize, 20> _lpc;
 
     void _shift_by_env(const Complex *input, 
                           Complex *output, 

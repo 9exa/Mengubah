@@ -592,7 +592,7 @@ uint32_t WSOLATimeStretcher::_stretch_sample_and_add(const Complex *sample) {
             sample + _next_overlap_start,
             overlap_buffer,
             actually_overlapped,
-            hann_window
+            hamming_window
         );
 
         // append new data

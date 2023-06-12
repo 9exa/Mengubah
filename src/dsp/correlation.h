@@ -57,8 +57,10 @@ class LPC {
 public:
     LPC(): 
         _fft(SampleSize),
-        _b(NParams + 1),
-        _autocovariance_slice(NParams + 1) {
+        // _b(NParams + 1),
+        // _autocovariance_slice(NParams + 1) {
+        _b{0},
+        _autocovariance_slice{0} {
         _b[0] = 1;
     }
 
@@ -91,7 +93,7 @@ public:
             _autocovariance_slice.begin()
         );
 
-        std::vector<float> a = solve_sym_toeplitz(_autocovariance_slice, _b);
+        std::array<float, NParams + 1> a = solve_sym_toeplitz(_autocovariance_slice, _b);
         std::array<Complex, SampleSize> a_comp{0};
         const float a0 = a[0];
         std::transform(a.cbegin(), a.cend(), a_comp.begin(),
@@ -162,8 +164,10 @@ private:
 
     // intermediates
     FFT _fft;
-    std::vector<float> _b;
-    std::vector<float> _autocovariance_slice;
+    std::array<float, NParams + 1> _b;
+    std::array<float, NParams + 1> _autocovariance_slice;
+    // std::vector<float> _b;
+    // std::vector<float> _autocovariance_slice;
     
 };
 

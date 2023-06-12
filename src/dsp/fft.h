@@ -46,19 +46,23 @@ public:
 
     const Complex *get_es() const;
 
-
+    uint32_t size() const { return _size; }
 
 private:
     Complex *_es;
     uint32_t _size;
     uint32_t _fft_size; // size of arrays used in fft computations. must be a power of 2
 
+    // cache buffers used in intermediate calculation
+    Complex *_inp_vec;
+    Complex *_out_vec;
+
     void _transform_rec(const Complex *input, Complex *output, const uint32_t N, const uint32_t stride) const;
     void _transform_rec(const CycleQueue<Complex> &input, uint32_t inp_ind, Complex *output, const uint32_t N, const uint32_t stride) const;
 
     friend class FFTBuffer;
 public:
-    uint32_t size() const { return _size; }
+    
 
 };
 

@@ -108,22 +108,35 @@ static void run (LV2_Handle instance, uint32_t sample_count)
         .value = *plugin->formant_shift,
     });
 
-    Complex *cbuffer = new Complex[sample_count];
-    for (uint32_t i = 0; i < sample_count; i++) {
-        cbuffer[i] = (Complex) plugin->in_buffer[i];
+    static constexpr uint32_t ProcSize = 1 << 10;
+    Complex cbuffer[ProcSize];
+    uint32_t num_processed = 0;
+
+    while (num_processed < sample_count) {
+        uint32_t num_this_pass = MIN(ProcSize, sample_count - num_processed);
+        for (uint32_t i = 0; i < num_this_pass; i++) {
+            cbuffer[i] = (Complex) plugin->in_buffer[num_processed + i];
+        }
+
+        pitch_shifter->push_signal(cbuffer, num_this_pass);
+        pitch_shifter->pop_transformed_signal(cbuffer, num_this_pass);
+        
+        formant_shifter->push_signal(cbuffer, num_this_pass);
+        formant_shifter->pop_transformed_signal(cbuffer, num_this_pass);
+
+        
+
+        for (uint32_t i = 0; i < num_this_pass; i++) {
+            plugin->out_buffer[num_processed + i] = cbuffer[i].real();
+        }
+
+        num_processed += num_this_pass;
     }
+    
 
-    formant_shifter->push_signal(cbuffer, sample_count);
-    formant_shifter->pop_transformed_signal(cbuffer, sample_count);
+    
 
-    pitch_shifter->push_signal(cbuffer, sample_count);
-    pitch_shifter->pop_transformed_signal(cbuffer, sample_count);
-
-    for (uint32_t i = 0; i < sample_count; i++) {
-        plugin->out_buffer[i] = cbuffer[i].real();
-    }
-
-    delete[] cbuffer;
+    
 }
 
 static void deactivate (LV2_Handle instance)

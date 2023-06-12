@@ -156,8 +156,8 @@ void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Comple
     }
 
     // perform filter
-    _raw_sample_filter.transform(filtered_raw, filtered_raw, ProcSize);
-    _shifted_sample_filter.transform(filtered_shifted, filtered_shifted, ProcSize);
+    // _raw_sample_filter.transform(filtered_raw, filtered_raw, ProcSize);
+    // _shifted_sample_filter.transform(filtered_shifted, filtered_shifted, ProcSize);
 
     // Get the (unormalized) power of each filtered sample
     float raw_power, shifted_power = 0.0f;
@@ -165,7 +165,6 @@ void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Comple
         raw_power += filtered_raw[i] * filtered_raw[i];
         shifted_power += filtered_shifted[i] * filtered_shifted[i];
     }
-
     float correction = sqrt(raw_power / shifted_power);
     if (!isfinite(correction)) {
         // abort if scaling cannot be done
