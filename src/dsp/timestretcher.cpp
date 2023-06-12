@@ -339,84 +339,86 @@ std::array<float, PhaseVocoderTimeStretcher::WindowSize / 2> PhaseVocoderDoneRig
         }
     }
 
-    // // perform propagation in all dimension
+    // perform propagation in all dimension
     std::array<float, WindowSize / 2> new_phases {0};
-    // while (n_can_recieve_propagation > 0) {
-    //     std::pop_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
-    //     FreqBin next_bin = propagation_queue[propagation_queue_size - 1];
-    //     propagation_queue_size -= 1;
+    while (n_can_recieve_propagation > 0) {
+        std::pop_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
+        FreqBin next_bin = propagation_queue[propagation_queue_size - 1];
+        propagation_queue_size -= 1;
 
-    //     const uint32_t freq_ind = next_bin.bin;
-    //     if (next_bin.frame == FreqBin::Prev) {
-    //         if (can_recieve_propagation[freq_ind]) {
-    //             new_phases[freq_ind] = last_stretched_phases[freq_ind] + (phase_time_deltas[freq_ind] * stretch_factor);
+        const uint32_t freq_ind = next_bin.bin;
+        if (next_bin.frame == FreqBin::Prev) {
+            if (can_recieve_propagation[freq_ind]) {
+                new_phases[freq_ind] = last_stretched_phases[freq_ind] + (phase_time_deltas[freq_ind] * stretch_factor);
                 
-    //             //remove from set
-    //             can_recieve_propagation[freq_ind] = false;
-    //             n_can_recieve_propagation -= 1;
+                //remove from set
+                can_recieve_propagation[freq_ind] = false;
+                n_can_recieve_propagation -= 1;
 
-    //             // push to the heap
-    //             propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_ind};
-    //             propagation_queue_size += 1;
-    //             std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
-    //         }
-    //     }
-    //     else {
-    //         if (freq_ind > 0 && can_recieve_propagation[freq_ind - 1]) {
-    //             const uint32_t freq_down = freq_ind - 1;
+                // push to the heap
+                propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_ind};
+                propagation_queue_size += 1;
+                std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
+            }
+        }
+        else {
+            if (freq_ind > 0 && can_recieve_propagation[freq_ind - 1]) {
+                const uint32_t freq_down = freq_ind - 1;
 
-    //             new_phases[freq_down] = new_phases[freq_ind] - (0.5 * (phase_freq_deltas[freq_down] + phase_freq_deltas[freq_ind]) * stretch_factor);
+                new_phases[freq_down] = new_phases[freq_ind] - (0.5 * (phase_freq_deltas[freq_down] + phase_freq_deltas[freq_ind]) * stretch_factor);
 
-    //             //remove from set
-    //             can_recieve_propagation[freq_down] = false;
-    //             n_can_recieve_propagation -= 1;
+                //remove from set
+                can_recieve_propagation[freq_down] = false;
+                n_can_recieve_propagation -= 1;
 
-    //             // push to the heap
-    //             propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_down};
-    //             propagation_queue_size += 1;
-    //             std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
-    //         }
-    //         if ((freq_ind < WindowSize / 2 - 1) && can_recieve_propagation[freq_ind + 1]) {
-    //             const uint32_t freq_up = freq_ind + 1;
-    //             new_phases[freq_up] = new_phases[freq_ind] + (0.5 * (phase_freq_deltas[freq_up] + phase_freq_deltas[freq_ind]) * stretch_factor);
+                // push to the heap
+                propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_down};
+                propagation_queue_size += 1;
+                std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
+            }
+            if ((freq_ind < WindowSize / 2 - 1) && can_recieve_propagation[freq_ind + 1]) {
+                const uint32_t freq_up = freq_ind + 1;
+                new_phases[freq_up] = new_phases[freq_ind] + (0.5 * (phase_freq_deltas[freq_up] + phase_freq_deltas[freq_ind]) * stretch_factor);
 
-    //             //remove from set
-    //             can_recieve_propagation[freq_up] = false;
-    //             n_can_recieve_propagation -= 1;
+                //remove from set
+                can_recieve_propagation[freq_up] = false;
+                n_can_recieve_propagation -= 1;
 
-    //             // push to the heap
-    //             propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_up};
-    //             propagation_queue_size += 1;
-    //             std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
-    //         }
-    //     }
+                // push to the heap
+                propagation_queue[propagation_queue_size] = FreqBin {.frame = FreqBin::Next, .bin = freq_up};
+                propagation_queue_size += 1;
+                std::push_heap(propagation_queue.begin(), propagation_queue.begin() + propagation_queue_size, freq_bin_cmp);
+            }
+        }
+    }
+
+
+    // std::array<float, WindowSize / 2> new_phases {0};
+    // auto freq_ind_cmp = [next_freq_mags] (uint32_t a, uint32_t b) { return next_freq_mags[a] > next_freq_mags[b]; };
+    // std::array<uint32_t, WindowSize / 2> freq_inds;
+    // for (uint32_t i = 0; i < WindowSize / 2; i++) { freq_inds[i] = i;}
+    // std::sort(freq_inds.begin(), freq_inds.end(), freq_ind_cmp);
+
+    // std::array<float, WindowSize / 2> prop_source_mag {0.0f};
+    // for (uint32_t i = 0; i < WindowSize / 2; i++) {
+    //     new_phases[i] = last_stretched_phases[i] + phase_time_deltas[i] * stretch_factor;
+    //     prop_source_mag[i] = prev_freq_mags[i];
     // }
-
-    auto freq_ind_cmp = [next_freq_mags] (uint32_t a, uint32_t b) { return next_freq_mags[a] > next_freq_mags[b]; };
-    std::array<uint32_t, WindowSize / 2> freq_inds;
-    for (uint32_t i = 0; i < WindowSize / 2; i++) { freq_inds[i] = i;}
-    std::sort(freq_inds.begin(), freq_inds.end(), freq_ind_cmp);
-
-    std::array<float, WindowSize / 2> prop_source_mag {0.0f};
-    for (uint32_t i = 0; i < WindowSize / 2; i++) {
-        new_phases[i] = last_stretched_phases[i] + phase_time_deltas[i] * stretch_factor;
-        prop_source_mag[i] = prev_freq_mags[i];
-    }
-    for (const uint32_t freq_ind: freq_inds) {
-        if (freq_ind > 0 && prop_source_mag[freq_ind - 1] < next_freq_mags[freq_ind]) {
-            const uint32_t freq_down = freq_ind - 1;
-            new_phases[freq_down] = new_phases[freq_ind] - 0.5 * stretch_factor * (phase_freq_deltas[freq_down] + phase_freq_deltas[freq_ind]);
-            prop_source_mag[freq_down] = next_freq_mags[freq_ind];
-        }
-        if (freq_ind < WindowSize / 2 && prop_source_mag[freq_ind + 1] < next_freq_mags[freq_ind]) {
-            const uint32_t freq_up = freq_ind + 1;
-            new_phases[freq_up] = new_phases[freq_ind] - 0.5 * stretch_factor * (phase_freq_deltas[freq_up] + phase_freq_deltas[freq_ind]);
-            prop_source_mag[freq_up] = next_freq_mags[freq_ind];
-        }
+    // for (const uint32_t freq_ind: freq_inds) {
+    //     if (freq_ind > 0 && prop_source_mag[freq_ind - 1] < next_freq_mags[freq_ind]) {
+    //         const uint32_t freq_down = freq_ind - 1;
+    //         new_phases[freq_down] = new_phases[freq_ind] - 0.5 * stretch_factor * (phase_freq_deltas[freq_down] + phase_freq_deltas[freq_ind]);
+    //         prop_source_mag[freq_down] = next_freq_mags[freq_ind];
+    //     }
+    //     if (freq_ind < WindowSize / 2 && prop_source_mag[freq_ind + 1] < next_freq_mags[freq_ind]) {
+    //         const uint32_t freq_up = freq_ind + 1;
+    //         new_phases[freq_up] = new_phases[freq_ind] - 0.5 * stretch_factor * (phase_freq_deltas[freq_up] + phase_freq_deltas[freq_ind]);
+    //         prop_source_mag[freq_up] = next_freq_mags[freq_ind];
+    //     }
 
 
-        prop_source_mag[freq_ind] = 2e10;
-    }
+    //     prop_source_mag[freq_ind] = 2e10;
+    // }
 
     return new_phases;   
 }

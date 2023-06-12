@@ -46,10 +46,8 @@ private:
     static float _display_func(float x, float freq, float offset = 0.0f);
     void _draw_plots();
 
-    const float MaxFreq = NSamples >> 2;//20000.0;
+    const float MaxFreq = NSamples >> 2;
     const float MinFreq = 1.0;
-    // Mengu::dsp::FFT *_smol_fft;
-    Mengu::dsp::PhaseVocoderPitchShifter *_pitch_shifter;
 
     float _freq = 40.0f;
     float _offset = 40.0f;

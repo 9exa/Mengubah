@@ -22,8 +22,8 @@
 Mengu::AudioPlayer::AudioPlayer() {
     pitch_shifters[0] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::WSOLATimeStretcher, 1);
     pitch_shifters[1] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::PSOLATimeStretcher, 1);
-    pitch_shifters[2] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
-    pitch_shifters[3] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderTimeStretcher(true), 1);
+    pitch_shifters[2] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderTimeStretcher(true), 1);
+    pitch_shifters[3] = new Mengu::dsp::TimeStretchPitchShifter(new dsp::PhaseVocoderDoneRightTimeStretcher(true), 1);
     pitch_shifters[4] = new Mengu::dsp::LPCFormantShifter();
     // pitch_shifters[2] = new Mengu::dsp::PhaseVocoderPitchShifterV2();
     // pitch_shifter = new Mengu::dsp::PhaseVocoderPitchShifter(BufferSize);

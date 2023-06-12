@@ -1,7 +1,7 @@
 
 /**
  * @brief UI for the Mengubah plugin, format agnostic
- * 
+ *  Unused
  */
 #ifndef MENGU_MENGUBAH_UI
 #define MENGU_MENGUBAH_UI
