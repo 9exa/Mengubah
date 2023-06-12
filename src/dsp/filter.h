@@ -31,11 +31,11 @@ public:
     BiquadFilter(float pa1, float pa2, float pb0, float pb1, float pb2);
 
     void transform(const float *input, float *output, uint32_t size);
+    void reset();
     
 private:
     // store the last 2 raw inputs and intermediaries
     float _last_ms[2] {0};
-    float _last_inputs[2] {0};
     uint32_t _last_offset = 0;
 };
 

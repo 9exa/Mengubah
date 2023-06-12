@@ -25,3 +25,7 @@ void BiquadFilter::transform(const float *input, float *output, uint32_t size) {
         _last_ms[_last_offset] = m;
     }
 }
+
+void BiquadFilter::reset() {
+    _last_ms[0] = _last_ms[1] = 0.0f; 
+}

@@ -35,6 +35,8 @@ public:
 
     void transform(const float *input, float *output, uint32_t size);
 
+    void reset();
+
 private:
     BiquadFilter _high_shelf_filter; // Stage 1 filter
     BiquadFilter _high_pass_filter; // Stage 2 filter

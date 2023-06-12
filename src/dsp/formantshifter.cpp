@@ -78,7 +78,10 @@ uint32_t LPCFormantShifter::n_transformed_ready() const {
 };
 
 // resets state of effect to make it reading to take in a new sample
-void LPCFormantShifter::reset() {}
+void LPCFormantShifter::reset() {
+    _raw_sample_filter.reset();
+    _shifted_sample_filter.reset();
+}
 
 // The properties that this Effect exposes to be changed by GUI. 
 // The index that they are put in is considered the props id
@@ -142,14 +145,6 @@ void LPCFormantShifter::_shift_by_env(const Complex *input,
             output[i] = Complex(0.0f);
         }
     }
-
-    // float correction = sqrt(input_amp2 / shifted_amp2);
-
-    // for (uint32_t i = 0; i < ProcSize / 2; i++) {
-    //     output[i] *= correction;
-    // }
-
-
 }
 
 void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample) {
@@ -171,13 +166,13 @@ void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Comple
         shifted_power += filtered_shifted[i] * filtered_shifted[i];
     }
 
-    if (shifted_power == 0.0f) {
-        // abort if the shifted signal was empty
+    float correction = sqrt(raw_power / shifted_power);
+    if (!isfinite(correction)) {
+        // abort if scaling cannot be done
         return;
     }
     else {
         // otherwise scale the shifted by the correction
-        float correction = sqrt(raw_power / shifted_power);
         for (uint32_t i = 0; i < ProcSize; i++) {
             shifted_sample[i] *= correction;
         }

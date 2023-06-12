@@ -58,5 +58,9 @@ LUFSFilter::LUFSFilter():
 
 void LUFSFilter::transform(const float *input, float *output, uint32_t size) {
     _high_shelf_filter.transform(input, output, size);
-    _high_pass_filter.transform(input, output, size);
+    _high_pass_filter.transform(output, output, size);
+}
+
+void LUFSFilter::reset() {
+
 }
