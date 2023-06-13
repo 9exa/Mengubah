@@ -11,6 +11,7 @@
 #include "nanogui/label.h"
 #include "nanogui/layout.h"
 #include "nanogui/popup.h"
+#include "nanogui/theme.h"
 #include "nanogui/vector.h"
 #include "nanogui/widget.h"
 #include "nanogui/window.h"
