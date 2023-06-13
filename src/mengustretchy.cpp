@@ -26,8 +26,6 @@
 #include "templates/cyclequeue.h"
 
 
-#define FILEDIALOG_OPEN_COMMAND "zenity --file-selection --file-filter=\'Music files (ogg,wav,mp3) | *.ogg *.wav *.mp3\'"
-
 using namespace Mengu;
 
 static float _wrap_phase(float phase) {

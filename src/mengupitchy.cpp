@@ -29,8 +29,6 @@
 #include <vector>
 
 
-#define FILEDIALOG_OPEN_COMMAND "zenity --file-selection --file-filter=\'Music files (ogg,wav,mp3) | *.ogg *.wav *.mp3\'"
-
 MenguPitchy::MenguPitchy(): 
     nanogui::Screen(
         nanogui::Vector2i(1280, 720), 

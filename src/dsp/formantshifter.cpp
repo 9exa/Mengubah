@@ -127,8 +127,6 @@ void LPCFormantShifter::_shift_by_env(const Complex *input,
                           Complex *output, 
                           const float *envelope, 
                           const float shift_factor) {
-    // Calculate the Loudness (in LUFS) as we do the shift so we can correct it afterward
-
     for (uint32_t i = 0; i < ProcSize / 2; i++) {
         uint32_t shifted_ind =  i / shift_factor;
         if (shifted_ind < ProcSize / 2) {
@@ -166,8 +164,12 @@ void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Comple
         shifted_power += filtered_shifted[i] * filtered_shifted[i];
     }
     float correction = sqrt(raw_power / shifted_power);
+    // std::cout << correction << ", " << raw_power << ", " << shifted_power << std::endl;
     if (!isfinite(correction)) {
-        // abort if scaling cannot be done
+        // just correct for 1/2 freq spectrum sampling if correction is not real
+        for (uint32_t i = 0; i < ProcSize; i++) {
+            shifted_sample[i] *= 2.0f;
+        }
         return;
     }
     else {
