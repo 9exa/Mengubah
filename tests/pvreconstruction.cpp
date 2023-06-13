@@ -36,7 +36,7 @@ class App: public nanogui::Screen {
     CycleQueue<Complex> reconstructed_values;
     std::vector<Complex> expected_values;
 
-    dsp::PhaseVocoderPitchShifter pvpitchshifter;
+    dsp::PhaseVocoderPitchShifterV2 pvpitchshifter;
 
     // Proportion of the base graph that gets processed per second
     float scroll_speed = 0.5;
@@ -59,7 +59,7 @@ public:
     static const uint32_t FramesPerSecond = 120;
 
     App() : nanogui::Screen(nanogui::Vector2i(800, 600), "Recon test"),
-            pvpitchshifter(1 << 8) {
+            pvpitchshifter() {
         BoxLayout *fill_layout = new BoxLayout(Orientation::Vertical);
         fill_layout->set_alignment(Alignment::Fill);
         set_layout(fill_layout);
@@ -95,7 +95,7 @@ public:
             float x = (float) i / NOneTime;
             one_time_based.push_back(std::sin(x * MATH_TAU));
         }
-        dsp::PhaseVocoderPitchShifter pp = dsp::PhaseVocoderPitchShifter(NSamples);
+        dsp::PhaseVocoderPitchShifterV2 pp = dsp::PhaseVocoderPitchShifterV2();
 
     }
 
@@ -124,7 +124,7 @@ public:
             expected_graph->get_values()[i] = expected_values[i].real();
         }
 
-        auto raw_buffer = pvpitchshifter.get_raw_buffer();
+        auto raw_buffer = base_values;
         raw_buffer_graph->get_values().resize(raw_buffer.size());
         for (uint32_t i = 0; i < raw_buffer.size(); i++ ) {
             (raw_buffer_graph->get_values()[i] = raw_buffer[i].real());

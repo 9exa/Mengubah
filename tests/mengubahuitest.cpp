@@ -3,8 +3,9 @@
 
 int main() {
     nanogui::init();
-    
-    Mengu::MengubahUI *app = new Mengu::MengubahUI();
+
+    Mengu::MengubahEngine engine;
+    Mengu::MengubahUI *app = new Mengu::MengubahUI(&engine);
     app->set_visible(true);
     app->draw_all();
 
