@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Mengubah VERSION 0.0.2)
+project(Mengubah VERSION 0.0.7)
 
 # set(CMAKE_DEBUG_POSTFIX d)
 
@@ -14,7 +14,7 @@ target_compile_features(mengu_compiler_flags INTERFACE cxx_std_20)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(mengu_compiler_flags INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O0;>>"
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O3>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
@@ -81,11 +81,12 @@ set_target_properties(Mengubah_lv2 PROPERTIES OUTPUT_NAME "mengubah")
 set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LV2_DEFAULT_DIR})
 target_link_libraries(Mengubah_lv2 PUBLIC ${NANO_LIB} mengu_compiler_flags)
 target_sources(Mengubah_lv2 PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengubah_lv2.cpp)
-file(COPY mengubah.ttl manifest.ttl DESTINATION ${LV2_DEFAULT_DIR})
+configure_file(mengubah.ttl.in "${LV2_DEFAULT_DIR}/mengubah.ttl")
+configure_file(manifest.ttl.in "${LV2_DEFAULT_DIR}/manifest.ttl")
 
 
 #Test executables
-option(MENGU_BUILD_TESTS "Test executables that show correctness of dsp functions" ON)
+option(MENGU_BUILD_TESTS "Test executables that show correctness of dsp functions" OFF)
 set (TEST_DIR "tests")
 
 if(MENGU_BUILD_TESTS)
@@ -96,4 +97,13 @@ if(MENGU_BUILD_TESTS)
     add_executable(lpctest ${ALL_SRC} ${TEST_DIR}/lpctest.cpp)
     target_link_libraries(lpctest PRIVATE ${NANO_LIB} mengu_compiler_flags)
 
+    add_executable(filtertest ${ALL_SRC} ${TEST_DIR}/filtertest.cpp)
+    target_link_libraries(filtertest PRIVATE ${NANO_LIB} mengu_compiler_flags)
+
+    # add_executable(mengubahuitest ${ALL_SRC} 
+    #     ${TEST_DIR}/mengubahuitest.cpp 
+    #     "${MenguPitchy_SOURCE_DIR}/mengubahui.cpp"
+    #     "${MenguPitchy_SOURCE_DIR}/mengubahengine.cpp"
+    # )
+    # target_link_libraries(mengubahuitest PRIVATE ${NANO_LIB} mengu_compiler_flags)
 endif()

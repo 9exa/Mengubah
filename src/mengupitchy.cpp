@@ -77,18 +77,7 @@ MenguPitchy::MenguPitchy():
     stop_button->set_callback([this] () {
         this->_audio_player.stop();
     });
-
-    // Button *interp_bottun = new Button(this, "Use interp");
-    // interp_bottun->set_flags(Button::Flags::ToggleButton);
-    // interp_bottun->set_change_callback([this] (bool on) {
-    //     this->_audio_player.pitch_shifter->use_interp = on;
-    // });
-
-    Button *func_button = new Button(_root, "Change Func");
-    func_button->set_callback([this] () {
-        this->use_func = !this->use_func;
-    });
-
+    
     Button *file_button = new Button(_root, "Load File");
     file_button->set_callback([this] () {
         // load a new audio file
@@ -140,7 +129,6 @@ MenguPitchy::MenguPitchy():
         });
     }
     effect_selection_window->set_title("");
-    // effect_selection_window->set_modal(true);
     effect_selection_window->set_layout(new BoxLayout(
         Orientation::Vertical,
         Alignment::Fill,
@@ -157,9 +145,9 @@ MenguPitchy::MenguPitchy():
         _root->set_fixed_size(new_size);
         perform_layout();
     });
+
     perform_layout();
 
-    _data.resize(NSamples);
 
     _draw_plots();
 
@@ -168,28 +156,9 @@ MenguPitchy::MenguPitchy():
 MenguPitchy::~MenguPitchy() {
     
 }
-
-void MenguPitchy::set_freq(const float &new_freq) {
-    _freq = new_freq;
-    
-}
-void MenguPitchy::set_offset(const float &new_offset) {
-    _offset = new_offset;
-}
-
 void MenguPitchy::draw_all() {
     if (m_redraw) {
-        frame += 1;
-        const size_t values_to_add = DataSpeed * NSamples / FramesPerSecond;
-        for (int i = 0; i < values_to_add; i++) {
-            // const float x = (float) _value_count / NSamples;
-            const float new_value = _display_func((float)(i + _value_count) / NSamples, _freq, frame);
-
-            _data.push_back(new_value);
-            _value_count++;
-        }
         _draw_plots();
-
     }
     nanogui::Screen::draw_all();
 }
@@ -200,12 +169,7 @@ void MenguPitchy::_draw_plots() {
     std::vector<std::complex<float>> complex_vals;
     complex_vals.resize(NSamples);
 
-    if (use_func) {
-        _data.to_array(vals.data());
-    }
-    else {
-        _audio_player.sample_buffer.to_array(vals.data());
-    }
+    _audio_player.sample_buffer.to_array(vals.data());
     
     
     for (uint32_t i = 0; i < NSamples; i++) {

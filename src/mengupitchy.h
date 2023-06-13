@@ -31,15 +31,8 @@ public:
     MenguPitchy();
     ~MenguPitchy();
 
-    void set_freq(const float &new_freq);
-    void set_offset(const float &new_offset);
-
     // basically the update() / process() function
     virtual void draw_all() override;
-
-    unsigned long frame = 0;
-
-    bool use_func = false;
 
 
 private:
@@ -49,18 +42,12 @@ private:
     const float MaxFreq = NSamples >> 2;
     const float MinFreq = 1.0;
 
-    float _freq = 40.0f;
-    float _offset = 40.0f;
-
     Mengu::LinePlotGPU *_sample_graph;
     Mengu::LinePlotGPU *_freq_graph;
     Mengu::dsp::FFT _fft;
 
     // Used as a proxy for the whole main screen, so we can also have Child Windows moving around for item selection
     nanogui::Widget *_root;
-    // values to be displayed
-    Mengu::CycleQueue<float> _data;
-    unsigned long _value_count = 0;
 
     Mengu::AudioPlayer _audio_player;
 };
