@@ -43,7 +43,7 @@ Mengu::AudioPlayer::~AudioPlayer() {
     }
 }
 
-void Mengu::AudioPlayer::load_file(const char *path) {
+uint32_t Mengu::AudioPlayer::load_file(const char *path) {
     if (file_loaded) {
         ma_device_uninit(&_device);
         ma_decoder_uninit(&_decoder);
@@ -52,25 +52,32 @@ void Mengu::AudioPlayer::load_file(const char *path) {
     if (result != MA_SUCCESS) {
         std::string err_msg ("Could not load file with ");
         err_msg += std::to_string(result);
+        file_loaded = false;
 
+        return result;
         throw std::runtime_error(err_msg);
+
+    }
+    else {
+        ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
+        device_config.playback.format = _decoder.outputFormat;
+        device_config.playback.channels = _decoder.outputChannels;
+        device_config.sampleRate = _decoder.outputSampleRate;
+        device_config.dataCallback = _data_callback;
+        ddata = {this, &_decoder};
+        device_config.pUserData = &ddata;
+
+        if (ma_device_init(nullptr, &device_config, &_device) != MA_SUCCESS) {
+            throw std::runtime_error("Could not init audio device");
+        }
+
+        ma_device_set_master_volume(&_device, 0.5);
+
+        file_loaded = true;
+        return 0;
     }
 
-    ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
-    device_config.playback.format = _decoder.outputFormat;
-    device_config.playback.channels = _decoder.outputChannels;
-    device_config.sampleRate = _decoder.outputSampleRate;
-    device_config.dataCallback = _data_callback;
-    ddata = {this, &_decoder};
-    device_config.pUserData = &ddata;
-
-    if (ma_device_init(nullptr, &device_config, &_device) != MA_SUCCESS) {
-        throw std::runtime_error("Could not init audio device");
-    }
-
-    ma_device_set_master_volume(&_device, 0.5);
-
-    file_loaded = true;
+    
 }
 
 void Mengu::AudioPlayer::play() {

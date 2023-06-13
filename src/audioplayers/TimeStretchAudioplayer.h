@@ -19,7 +19,7 @@ public:
     TimeStretchAudioPlayer();
     ~TimeStretchAudioPlayer();
 
-    void load_file(const char *path);
+    uint32_t load_file(const char *path);
     
     void play();
 
@@ -34,7 +34,9 @@ public:
 
     static inline const int32_t BufferSize = 1 << 11;
     
+    static constexpr uint8_t NTimeStretcher = 5;
     dsp::TimeStretcher *time_stretcher;
+    dsp::TimeStretcher *time_stretchers[NTimeStretcher];
 
 
 
@@ -52,9 +54,7 @@ private:
 
     bool file_loaded = false;
 
-    static constexpr uint8_t NTimeStretcher = 5;
 
-    dsp::TimeStretcher *_time_stretchers[NTimeStretcher];
 
 };
 

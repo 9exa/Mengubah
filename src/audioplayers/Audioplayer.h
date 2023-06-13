@@ -16,8 +16,8 @@ class AudioPlayer {
 public:
     AudioPlayer();
     ~AudioPlayer();
-
-    void load_file(const char *path);
+    // 0 if load_file was successful
+    uint32_t load_file(const char *path);
     
     void play();
 

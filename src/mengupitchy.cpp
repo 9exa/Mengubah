@@ -7,6 +7,7 @@
 #include "gui/lineplotgpu.h"
 #include "mengumath.h"
 #include "nanogui/combobox.h"
+#include "nanogui/common.h"
 #include "nanogui/label.h"
 #include "nanogui/layout.h"
 #include "nanogui/popup.h"
@@ -25,9 +26,7 @@
 #include <vector>
 
 
-#define DIRPATH "/home/wes/Music"
-#define FILEPATH "/home/wes/Music/Treasured Creation - SSN Ghost Peppered OST.ogg"
-#define FILEDIALOG_OPEN_COMMAND "/usr/bin/zenity --file-selection --file-filter=\'Music files (ogg,wav,mp3) | *.ogg *.wav *.mp3\'"
+#define FILEDIALOG_OPEN_COMMAND "zenity --file-selection --file-filter=\'Music files (ogg,wav,mp3) | *.ogg *.wav *.mp3\'"
 
 MenguPitchy::MenguPitchy(): 
     nanogui::Screen(
@@ -43,7 +42,6 @@ MenguPitchy::MenguPitchy():
     _root->set_size(size());
 
     //audio
-    _audio_player.load_file(FILEPATH);
     _audio_player.sample_buffer.resize(NSamples);
 
     //gui
@@ -59,13 +57,39 @@ MenguPitchy::MenguPitchy():
     // display the (phase invariant) amplitudes of each frequency
     // half the number of sample because of symmytre and the nyquil freq
     _freq_graph = new LinePlotGPU(_root, "Freqs");
-    _freq_graph->get_values().resize(NSamples);    
+    _freq_graph->get_values().resize(NSamples);   
+
+    // File loading 
+    Widget *file_label_parent = new Widget(_root);
+    file_label_parent->set_layout(new BoxLayout(Orientation::Vertical, Alignment::Middle));
+    file_label_parent->set_fixed_width(_root->width());
     
-    EffectControl *stretcher_control = new EffectControl(_root, "Pitch Shifter");
-    stretcher_control->display_property_list(_audio_player.pitch_shifter->get_property_descs());
-    stretcher_control->set_callback(
-        [this] (uint32_t ind, EffectPropPayload data) {_audio_player.pitch_shifter->set_property(ind, data); }
-    );
+    Label *file_label = new Label(file_label_parent, "No File loaded");
+    file_label->set_fixed_height(40);
+    file_label->set_font_size(30);
+
+    Button *file_button = new Button(_root, "Load File");
+    file_button->set_callback([this, file_label] () {
+        // load a new audio file
+        char filename[1024] = {'\0'};
+        FILE *f = popen(FILEDIALOG_OPEN_COMMAND, "r");
+        if (fgets(filename, 1024, f) != nullptr) {
+            char *newline_at = strrchr(filename, '\n');
+            if (newline_at != nullptr) {
+                *newline_at = '\0'; // remove the newline character at the end
+            }
+
+            
+            if (this->_audio_player.load_file(filename)) {
+                file_label->set_caption("Could Not Load selected File.");
+            }
+            else {
+                file_label->set_caption(filename);
+            }
+            this->perform_layout();
+        }
+        pclose(f);
+    });
 
 
     Button *play_button = new Button(_root, "Play");
@@ -78,22 +102,11 @@ MenguPitchy::MenguPitchy():
         this->_audio_player.stop();
     });
     
-    Button *file_button = new Button(_root, "Load File");
-    file_button->set_callback([this] () {
-        // load a new audio file
-        char filename[1024] = {'\0'};
-        FILE *f = popen(FILEDIALOG_OPEN_COMMAND, "r");
-        if (fgets(filename, 1024, f) != nullptr) {
-            char *newline_at = strrchr(filename, '\n');
-            if (newline_at != nullptr) {
-                *newline_at = '\0'; // remove the newline character at the end
-            }
-
-            this->_audio_player.load_file(filename);
-        }
-        pclose(f);
-
-    });
+    EffectControl *stretcher_control = new EffectControl(_root, "Pitch Shifter");
+    stretcher_control->display_property_list(_audio_player.pitch_shifter->get_property_descs());
+    stretcher_control->set_callback(
+        [this] (uint32_t ind, EffectPropPayload data) {_audio_player.pitch_shifter->set_property(ind, data); }
+    );
 
     const char* def_effect_name = "WSOLA Pitch Shifter";
     Button *effect_selection_button = new Button(_root, def_effect_name);
@@ -105,7 +118,7 @@ MenguPitchy::MenguPitchy():
 
     std::string effect_names[AudioPlayer::NPitchShifters] = {
         "WSOLA Pitch Shifter",
-        "PSOLA Pitch Shifter",
+        "PSOLA Formant Shifter",
         "Phase Vocoder",
         "Phase Vocoder '''Done right'''",
         "Formant Shifter",

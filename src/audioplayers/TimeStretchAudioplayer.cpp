@@ -22,14 +22,14 @@ Mengu::TimeStretchAudioPlayer::TimeStretchAudioPlayer() {
     right_buffer.resize(BufferSize);
     sample_buffer.resize(BufferSize);
 
-    _time_stretchers[0] = new Mengu::dsp::PhaseVocoderTimeStretcher(true);
-    _time_stretchers[1] = new Mengu::dsp::PhaseVocoderDoneRightTimeStretcher();
-    _time_stretchers[2] = new Mengu::dsp::OLATimeStretcher(1 << 11);
-    _time_stretchers[3] = new Mengu::dsp::WSOLATimeStretcher();
-    _time_stretchers[4] = new Mengu::dsp::PSOLATimeStretcher();
+    time_stretchers[0] = new Mengu::dsp::PhaseVocoderTimeStretcher(true);
+    time_stretchers[1] = new Mengu::dsp::PhaseVocoderDoneRightTimeStretcher(true);
+    time_stretchers[2] = new Mengu::dsp::OLATimeStretcher(1 << 11);
+    time_stretchers[3] = new Mengu::dsp::WSOLATimeStretcher();
+    time_stretchers[4] = new Mengu::dsp::PSOLATimeStretcher();
     
 
-    time_stretcher = _time_stretchers[0];
+    time_stretcher = time_stretchers[0];
     
 }
 
@@ -40,46 +40,46 @@ Mengu::TimeStretchAudioPlayer::~TimeStretchAudioPlayer() {
     }
 
     for (uint32_t i = 0; i < NTimeStretcher; i++) {
-        delete _time_stretchers[i];
+        delete time_stretchers[i];
     }
 }
 
-void Mengu::TimeStretchAudioPlayer::load_file(const char *path) {
-    if (file_loaded) {
-        stop();
 
+uint32_t Mengu::TimeStretchAudioPlayer::load_file(const char *path) {
+    if (file_loaded) {
         ma_device_uninit(&_device);
         ma_decoder_uninit(&_decoder);
     }
-
-    ma_decoder_config decoder_config = ma_decoder_config_init_default();
-    decoder_config.format = ma_format_f32;
-
-    ma_result result = ma_decoder_init_file(path, &decoder_config, &_decoder);
+    ma_result result = ma_decoder_init_file(path, nullptr, &_decoder);
     if (result != MA_SUCCESS) {
         std::string err_msg ("Could not load file with ");
         err_msg += std::to_string(result);
+        file_loaded = false;
 
+        return result;
         throw std::runtime_error(err_msg);
+
     }
+    else {
+        ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
+        device_config.playback.format = _decoder.outputFormat;
+        device_config.playback.channels = _decoder.outputChannels;
+        device_config.sampleRate = _decoder.outputSampleRate;
+        device_config.dataCallback = _data_callback;
+        ddata = {this, &_decoder};
+        device_config.pUserData = &ddata;
 
+        if (ma_device_init(nullptr, &device_config, &_device) != MA_SUCCESS) {
+            throw std::runtime_error("Could not init audio device");
+        }
 
-    ma_device_config device_config = ma_device_config_init(ma_device_type_playback);
-    device_config.playback.format = _decoder.outputFormat;
-    device_config.playback.channels = _decoder.outputChannels;
-    device_config.sampleRate = _decoder.outputSampleRate;
-    device_config.dataCallback = _data_callback;
-    ddata = {this, &_decoder};
-    device_config.pUserData = &ddata;
+        ma_device_set_master_volume(&_device, 0.5);
 
-    if (ma_device_init(nullptr, &device_config, &_device) != MA_SUCCESS) {
-        throw std::runtime_error("Could not init audio device");
-    }
-
-    ma_device_set_master_volume(&_device, 0.5);
-
-    file_loaded = true;
+        file_loaded = true;
+        return 0;
+    }    
 }
+
 
 void Mengu::TimeStretchAudioPlayer::play() {
     if (file_loaded) {
