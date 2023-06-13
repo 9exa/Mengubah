@@ -19,7 +19,7 @@ target_compile_options(mengu_compiler_flags INTERFACE
 )
 
 set(NANOGUI_BUILD_EXAMPLES OFF)
-set(NANOGUI_BUILD_SHARED ON)
+set(NANOGUI_BUILD_SHARED OFF)
 set(NANOGUI_BUILD_PYTHON OFF)
 set(NANOGUI_BUILD_EXAMPLES OFF)
 set(NANOGUI_INSTALL OFF)
@@ -74,16 +74,18 @@ target_sources(MenguVoice PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/RealTimeC
 
 
 set(LV2_DEFAULT_DIR "${PROJECT_BINARY_DIR}/mengubah.lv2")
+option(MENGU_LV2 "Whether or not to build the LV2" ON)
 
-add_library(Mengubah_lv2 MODULE)
-set_target_properties(Mengubah_lv2 PROPERTIES PREFIX "")
-set_target_properties(Mengubah_lv2 PROPERTIES OUTPUT_NAME "mengubah")
-set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LV2_DEFAULT_DIR})
-target_link_libraries(Mengubah_lv2 PUBLIC ${NANO_LIB} mengu_compiler_flags)
-target_sources(Mengubah_lv2 PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengubah_lv2.cpp)
-configure_file(mengubah.ttl.in "${LV2_DEFAULT_DIR}/mengubah.ttl")
-configure_file(manifest.ttl.in "${LV2_DEFAULT_DIR}/manifest.ttl")
-
+if (MENGU_LV2)
+    add_library(Mengubah_lv2 MODULE)
+    set_target_properties(Mengubah_lv2 PROPERTIES PREFIX "")
+    set_target_properties(Mengubah_lv2 PROPERTIES OUTPUT_NAME "mengubah")
+    set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LV2_DEFAULT_DIR})
+    target_link_libraries(Mengubah_lv2 PUBLIC ${NANO_LIB} mengu_compiler_flags)
+    target_sources(Mengubah_lv2 PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengubah_lv2.cpp)
+    configure_file(mengubah.ttl.in "${LV2_DEFAULT_DIR}/mengubah.ttl")
+    configure_file(manifest.ttl.in "${LV2_DEFAULT_DIR}/manifest.ttl")
+endif()
 
 #Test executables
 option(MENGU_BUILD_TESTS "Test executables that show correctness of dsp functions" OFF)
