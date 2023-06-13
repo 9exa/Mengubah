@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <nanogui/screen.h>
 #include <string>
-#include <format>
 
 using namespace Mengu;
 using namespace dsp;
