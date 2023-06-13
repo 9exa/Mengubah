@@ -5,6 +5,8 @@
 #include "gui/effectcontrol.h"
 #include "gui/lineplot.h"
 #include "gui/lineplotgpu.h"
+#include "gui/filedialog.h"
+
 #include "mengumath.h"
 #include "nanogui/combobox.h"
 #include "nanogui/common.h"
@@ -72,24 +74,16 @@ MenguPitchy::MenguPitchy():
     Button *file_button = new Button(_root, "Load File");
     file_button->set_callback([this, file_label] () {
         // load a new audio file
-        char filename[1024] = {'\0'};
-        FILE *f = popen(FILEDIALOG_OPEN_COMMAND, "r");
-        if (fgets(filename, 1024, f) != nullptr) {
-            char *newline_at = strrchr(filename, '\n');
-            if (newline_at != nullptr) {
-                *newline_at = '\0'; // remove the newline character at the end
-            }
-
-            
-            if (this->_audio_player.load_file(filename)) {
-                file_label->set_caption("Could Not Load selected File.");
+        std::string filename = open_file_dialog({{"wav", "WaveForm"}, {"mp3", "AudioPlayer"}, {"ogg", "Vorbis Audio"}});
+        if (!filename.empty()) {
+            if (_audio_player.load_file(filename.data())) {
+                file_label->set_caption("File could not be loaded");
             }
             else {
                 file_label->set_caption(filename);
             }
-            this->perform_layout();
         }
-        pclose(f);
+
     });
 
 

@@ -97,12 +97,12 @@ public:
         if (new_size > _size) {
             // expand from back
             if ( _size > 0) {
-                for (uint i = _size; i < new_size; i++) {
+                for (uint32_t i = _size; i < new_size; i++) {
                     _data[(_front + i) % _capacity] = _data[(_front + _size - 1) % _capacity];
                 }
             }
             else {
-                for (uint i = _size; i < new_size; i++) {
+                for (uint32_t i = _size; i < new_size; i++) {
                     _data[(_front + i) % _capacity] = T();
                 }
             }
