@@ -21,8 +21,10 @@ Dependencies
 - Nanogui (included in repo) - Platform independent GUI. A bit barebones and ugly, but makes smaller binaries than feature rich libraries like Qt and GTK
 
 - The LV2 SDK - Required only for building the LV2 plugin. On by default, disable with -DMENGU_LV2=OFF when creating the build tree
+
 On Arch Linux:
 `pacman -S lv2`
+
 On other systems, use your appropriate package manager.
 
 Building
