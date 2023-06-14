@@ -24,7 +24,6 @@
 #include <nanogui/button.h>
 #include <filesystem>
 #include <iostream>
-#include <stdio.h>
 #include <string>
 #include <vector>
 

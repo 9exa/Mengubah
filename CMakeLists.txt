@@ -14,9 +14,11 @@ target_compile_features(mengu_compiler_flags INTERFACE cxx_std_20)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(mengu_compiler_flags INTERFACE
-  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O3>>"
+  "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O3;>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(NANOGUI_BUILD_EXAMPLES OFF)
 set(NANOGUI_BUILD_SHARED OFF)

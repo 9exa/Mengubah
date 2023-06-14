@@ -1,12 +1,13 @@
 #include "gui/filedialog.h"
 
 #include <nanogui/common.h>
+#include <cstring>
 
 #ifdef __linux__
 std::string Mengu::open_file_dialog(const std::vector<std::pair<std::string, std::string>> &filetypes) {
     char filename[1024] = {'\0'};
     
-    std::string filedialog_open_command =  "zenity --file-selection "
+    std::string filedialog_open_command =  "zenity --file-selection ";
     filedialog_open_command.append(" --file-filter=\'Supported Files |");
     for (auto filetype: filetypes) {
         filedialog_open_command.append(" *.");
@@ -22,7 +23,7 @@ std::string Mengu::open_file_dialog(const std::vector<std::pair<std::string, std
         filedialog_open_command.append("\'");
     }
 
-    FILE *f = popen(filedialog_open_command, "r");
+    FILE *f = popen(filedialog_open_command.data(), "r");
     if (fgets(filename, 1024, f) != nullptr) {
         char *newline_at = strrchr(filename, '\n');
         if (newline_at != nullptr) {
