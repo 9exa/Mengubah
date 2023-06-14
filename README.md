@@ -45,6 +45,8 @@ Build it
 cmake --build .
 ```
 
+The results should now be in /build/bin
+
 
 Other
 =====
