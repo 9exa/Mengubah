@@ -158,7 +158,8 @@ void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Comple
     _shifted_sample_filter.transform(filtered_shifted, filtered_shifted, ProcSize);
 
     // Get the (unormalized) power of each filtered sample
-    float raw_power, shifted_power = 0.0f;
+    float raw_power = 0.0f;
+    float shifted_power = 0.0f;
     for(uint32_t i = 0; i < ProcSize; i++) {
         raw_power += filtered_raw[i] * filtered_raw[i];
         shifted_power += filtered_shifted[i] * filtered_shifted[i];

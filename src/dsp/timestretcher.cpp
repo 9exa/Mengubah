@@ -91,7 +91,7 @@ uint32_t PhaseVocoderTimeStretcher::pop_transformed_signal(Complex *output, cons
         _load_new_freq_window(sample);
 
         std::array<Complex, WindowSize / 2> curr_freqs;
-        std::copy(_lpc.get_freq_spectrum().cbegin(), _lpc.get_freq_spectrum().cend(), curr_freqs.begin());
+        std::copy(_lpc.get_freq_spectrum().cbegin(), _lpc.get_freq_spectrum().cbegin() + WindowSize / 2, curr_freqs.begin());
 
         float analysis_hop_sizef = SynthesisHopSize / _stretch_factor;
         _stretched_sample_truncated += std::modf(analysis_hop_sizef, &analysis_hop_sizef);
@@ -106,7 +106,7 @@ uint32_t PhaseVocoderTimeStretcher::pop_transformed_signal(Complex *output, cons
 
         // std::array<Complex, WindowSize> new_samples = _calc_new_samples(amplitudes.data(), curr_raw_phases.data()); 
         std::array<Complex, WindowSize> new_samples = _calc_new_samples(amplitudes.data(), new_phases.data()); 
-        
+
         mix_and_extend(_transformed_buffer, new_samples, WindowSize - SynthesisHopSize, hann_window);
         // _transformed_buffer.extend_back(new_samples.data(), WindowSize);
 

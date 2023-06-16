@@ -4,11 +4,12 @@
 #include "dsp/formantshifter.h"
 #include "dsp/pitchshifter.h"
 #include "dsp/timestretcher.h"
-#include "extras/miniaudio_split/miniaudio.h"
 #include "templates/cyclequeue.h"
 #include <cstdint>
 #include <vector>
 
+
+#include "extras/miniaudio_split/miniaudio.h"
 #define STB_VORBIS_HEADER_ONLY
 #include "extras/stb_vorbis.c"    /* Enables Vorbis decoding. */
 
