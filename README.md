@@ -49,6 +49,11 @@ cmake --build .
 
 The results should now be in /build/bin
 
+Tested on Linux gcc, MinGW, MSVC
+
+Binaries
+=====
+For those who do not want to build it yourself [here is a link to some prebuilt binaries](https://drive.google.com/drive/folders/1WAx0_zWLrofNzsw-H7JzYDPCZMCYWLFI?usp=sharing)
 
 Other
 =====
