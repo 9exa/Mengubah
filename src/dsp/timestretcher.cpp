@@ -91,7 +91,7 @@ uint32_t PhaseVocoderTimeStretcher::pop_transformed_signal(Complex *output, cons
         _load_new_freq_window(sample);
 
         std::array<Complex, WindowSize / 2> curr_freqs;
-        std::copy(_lpc.get_freq_spectrum().cbegin(), _lpc.get_freq_spectrum().cend(), curr_freqs.begin());
+        std::copy(_lpc.get_freq_spectrum().cbegin(), _lpc.get_freq_spectrum().cbegin() + WindowSize / 2, curr_freqs.begin());
 
         float analysis_hop_sizef = SynthesisHopSize / _stretch_factor;
         _stretched_sample_truncated += std::modf(analysis_hop_sizef, &analysis_hop_sizef);
@@ -105,7 +105,7 @@ uint32_t PhaseVocoderTimeStretcher::pop_transformed_signal(Complex *output, cons
         std::array<float, WindowSize / 2> new_phases = _calc_scaled_phases(curr_freqs, analysis_hop_size);
 
         // std::array<Complex, WindowSize> new_samples = _calc_new_samples(amplitudes.data(), curr_raw_phases.data()); 
-        std::array<Complex, WindowSize> new_samples = _calc_new_samples(amplitudes.data(), new_phases.data()); 
+        std::array<Complex, WindowSize> new_samples = _calc_new_samples(sample, amplitudes.data(), new_phases.data()); 
         
         mix_and_extend(_transformed_buffer, new_samples, WindowSize - SynthesisHopSize, hann_window);
         // _transformed_buffer.extend_back(new_samples.data(), WindowSize);
@@ -142,40 +142,25 @@ void PhaseVocoderTimeStretcher::reset() {
 // };
 
 std::array<float, PhaseVocoderTimeStretcher::WindowSize / 2> PhaseVocoderTimeStretcher::_calc_scaled_magnitudes() {
-    const std::array<Complex, WindowSize> &freqs = _lpc.get_freq_spectrum();
     std::array<float, WindowSize / 2> mags;
     
     if (_preserve_formants) {
         const std::array<float, WindowSize> &envelope = _lpc.get_envelope();
-        std::array<float, WindowSize / 2> scaled_envelope;
+        const std::array<float, WindowSize> &residuals = _lpc.get_residuals();
 
-        // make values of the the envelop not zero to prevent infinitys and nans
-        const float envelope_max = std::reduce(envelope.cbegin(), envelope.cbegin() + WindowSize / 2, 0.0, 
-        [] (float a, float b) {
-                return MAX(a, b);
-            }
-        );
-        std::transform(envelope.cbegin(), envelope.cbegin() + WindowSize / 2, scaled_envelope.begin(),
-            [envelope_max] (float v) { return 0.05f * envelope_max + v; }
-        );
-
-
-        // Scale to the envelope
         for (uint32_t i = 0; i < WindowSize / 2; i++) {
             const uint32_t stretched_ind = i * _stretch_factor;
-            const float correction = ((uint32_t) (stretched_ind) < WindowSize / 2) && std::isfinite(scaled_envelope[stretched_ind] / scaled_envelope[i]) ?
-                scaled_envelope[stretched_ind] / scaled_envelope[i] : 
-                0.0f; 
-            // if (!std::isfinite(correction)) {
-            //     std::cout << "nan ai: "<< i << " " << scaled_envelope[i] <<" emax" << envelope_max << std::endl;
-            // }
-            
-            mags[i] = sqrt(std::norm(freqs[i])) * correction;
+            if (stretched_ind < WindowSize / 2 && std::isfinite(residuals[i] * envelope[stretched_ind])) {
+                mags[i] = residuals[i] * envelope[stretched_ind];
+            }
+            else {
+                mags[i] = 0.0f;
+            }
         }
     }
     else {
+        const std::array<Complex, WindowSize> &freqs = _lpc.get_freq_spectrum();
         for (uint32_t i = 0; i < WindowSize / 2; i++) {
-            // mags[i] = residuals[i] * envelope[i];
             mags[i] = sqrt(std::norm(freqs[i]));
         }
     }
@@ -228,15 +213,22 @@ void PhaseVocoderTimeStretcher::_replace_prev_freqs(const std::array<float, Wind
     std::copy(curr_phases.cbegin(), curr_phases.cend(), _prev_raw_phases.begin());
 }
 
-std::array<Complex, PhaseVocoderTimeStretcher::WindowSize> PhaseVocoderTimeStretcher::_calc_new_samples(const float *amplitudes, const float *phases) {
+std::array<Complex, PhaseVocoderTimeStretcher::WindowSize> PhaseVocoderTimeStretcher::_calc_new_samples(
+            const std::array<Complex, WindowSize> &raw_samples,
+            const float *amplitudes, 
+            const float *phases) {
     std::array<Complex, WindowSize> freqs = {0.0};
     for (uint32_t i = 0; i < WindowSize / 2; i++) {
         freqs[i] = 2.0f * std::polar(amplitudes[i], phases[i]);
     }
 
-    std::array<Complex, WindowSize> samples;
-    _lpc.get_fft().inverse_transform(freqs.data(), samples.data());
-    return samples;
+    std::array<Complex, WindowSize> new_samples;
+    _lpc.get_fft().inverse_transform(freqs.data(), new_samples.data());
+
+    // Make shifted as loud as raw samples
+    _loudness_norm.normalize(new_samples.data(), raw_samples.data(), new_samples.data());
+
+    return new_samples;
 }
 
 PhaseVocoderDoneRightTimeStretcher::PhaseVocoderDoneRightTimeStretcher(bool preserve_formants) : PhaseVocoderTimeStretcher(preserve_formants) {}

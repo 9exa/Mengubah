@@ -5,6 +5,7 @@
 #include "dsp/correlation.h"
 #include "dsp/effect.h"
 #include "dsp/fft.h"
+#include "dsp/loudness.h"
 #include "templates/vecdeque.h"
 #include <array>
 #include <cstdint>
@@ -76,7 +77,10 @@ private:
 
     bool _preserve_formants = false;
 
-    std::array<Complex, WindowSize> _calc_new_samples(const float *amplitudes, const float *phase_deltas);
+    // Used to make sure the percieved loudness of the sample is preserved
+    LoudnessNormalizer<Complex, WindowSize, 1> _loudness_norm;
+    
+    std::array<Complex, WindowSize> _calc_new_samples(const std::array<Complex, WindowSize> &raw_samples, const float *amplitudes, const float *phase_deltas);
 
 };
 

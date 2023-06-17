@@ -54,20 +54,17 @@ private:
     static constexpr uint32_t HopSize = ProcSize * 4 / 5;
     static constexpr uint32_t OverlapSize = ProcSize - HopSize;
 
-    LPC<ProcSize, 20> _lpc;
+    LPC<ProcSize, 60> _lpc;
 
     void _shift_by_env(const Complex *input, 
                           Complex *output, 
                           const float *envelope, 
                           const float shift_factor);
 
-
-    // Amplifies the formant_shifted samples so they have the same LUFS loudness as the raw_sample
-    void _rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample);
     float _shift_factor = 1.0f;
 
-    // cache the coefficents that result from the filters in LUFS calculation
-    Complex _LUFS_coeffs[ProcSize];
+    // Amplifies the formant_shifted samples so they have the same LUFS loudness as the raw_sample
+    LoudnessNormalizer<Complex, ProcSize, 2> _loudness_norm;
 
     LUFSFilter _raw_sample_filter;
     LUFSFilter _shifted_sample_filter;

@@ -62,5 +62,6 @@ void LUFSFilter::transform(const float *input, float *output, uint32_t size) {
 }
 
 void LUFSFilter::reset() {
-
+    _high_shelf_filter.reset();
+    _high_pass_filter.reset();
 }

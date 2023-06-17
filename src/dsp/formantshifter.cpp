@@ -54,7 +54,7 @@ uint32_t LPCFormantShifter::pop_transformed_signal(Complex *output, const uint32
 
         // Make downward shifts not quieter and upward shifts not louder
         // Automatically adjusts for the fact that only half of the frequency spectrum is used
-        _rescale_shifted_freqs(samples.data(), shifted_samples.data());
+        _loudness_norm.normalize(shifted_samples.data(), samples.data(), shifted_samples.data());
 
         // copy to output
         mix_and_extend(_transformed_buffer, shifted_samples, OverlapSize, hamming_window);
@@ -144,40 +144,3 @@ void LPCFormantShifter::_shift_by_env(const Complex *input,
         }
     }
 }
-
-void LPCFormantShifter::_rescale_shifted_freqs(const Complex *raw_sample, Complex *shifted_sample) {
-    float filtered_raw[ProcSize];
-    float filtered_shifted[ProcSize];
-    for (uint32_t i = 0; i < ProcSize; i++) {
-        filtered_raw[i] = raw_sample[i].real();
-        filtered_shifted[i] = shifted_sample[i].real();
-    }
-
-    // perform filter
-    _raw_sample_filter.transform(filtered_raw, filtered_raw, ProcSize);
-    _shifted_sample_filter.transform(filtered_shifted, filtered_shifted, ProcSize);
-
-    // Get the (unormalized) power of each filtered sample
-    float raw_power, shifted_power = 0.0f;
-    for(uint32_t i = 0; i < ProcSize; i++) {
-        raw_power += filtered_raw[i] * filtered_raw[i];
-        shifted_power += filtered_shifted[i] * filtered_shifted[i];
-    }
-    float correction = sqrt(raw_power / shifted_power);
-    // std::cout << correction << ", " << raw_power << ", " << shifted_power << std::endl;
-    if (!isfinite(correction)) {
-        // just correct for 1/2 freq spectrum sampling if correction is not real
-        for (uint32_t i = 0; i < ProcSize; i++) {
-            shifted_sample[i] *= 2.0f;
-        }
-        return;
-    }
-    else {
-        // otherwise scale the shifted by the correction
-        for (uint32_t i = 0; i < ProcSize; i++) {
-            shifted_sample[i] *= correction;
-        }
-    }
-    
-}
- 
