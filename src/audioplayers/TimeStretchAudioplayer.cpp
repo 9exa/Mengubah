@@ -44,13 +44,24 @@ Mengu::TimeStretchAudioPlayer::~TimeStretchAudioPlayer() {
     }
 }
 
+static ma_encoding_format get_encoding_format(const fs::path &file_path) {
+    const fs::path ext = file_path.extension();
+    if ( ext == ".ogg") { return ma_encoding_format_vorbis; }
+    else if (ext == ".wav") { return ma_encoding_format_wav; }
+    else if (ext == ".mp3") { return ma_encoding_format_mp3; }
+    else { return ma_encoding_format_unknown; }
+}
 
-uint32_t Mengu::TimeStretchAudioPlayer::load_file(const char *path) {
+uint32_t Mengu::TimeStretchAudioPlayer::load_file(const fs::path &file_path) {
     if (file_loaded) {
         ma_device_uninit(&_device);
         ma_decoder_uninit(&_decoder);
     }
-    ma_result result = ma_decoder_init_file(path, nullptr, &_decoder);
+
+    ma_decoder_config decoder_config =  ma_decoder_config_init(ma_format_f32, 1, 44100);
+    decoder_config.encodingFormat = get_encoding_format(file_path);
+
+    ma_result result = ma_decoder_init_file(file_path.c_str(), &decoder_config, &_decoder);
     if (result != MA_SUCCESS) {
         std::string err_msg ("Could not load file with ");
         err_msg += std::to_string(result);
@@ -79,7 +90,6 @@ uint32_t Mengu::TimeStretchAudioPlayer::load_file(const char *path) {
         return 0;
     }    
 }
-
 
 void Mengu::TimeStretchAudioPlayer::play() {
     if (file_loaded) {

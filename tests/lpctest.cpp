@@ -108,9 +108,9 @@ public:
         Button *file_button = new Button(this, "Load File");
         file_button->set_callback([this] () {
             // load a new audio file
-            std::string filename = open_file_dialog({{"wav", "WaveForm"}, {"mp3", "AudioPlayer"}});
+            std::string filename = open_file_dialog({{"wav", "WaveForm"}, {"ogg", "WaveForm"}, {"mp3", "AudioPlayer"}});
             if (!filename.empty()) {
-                if (audio_player->load_file(filename.data())) {
+                if (audio_player->load_file(filename)) {
                     std::cout << "file not loaded" << std::endl;
                 }
                 else {
@@ -257,8 +257,9 @@ int main() {
     catch(std::exception e) {
         std::cout << e.what() << std::endl;
     }
+    delete app;
+
     nanogui::shutdown();
 
-    delete app;
     return 0;
 }

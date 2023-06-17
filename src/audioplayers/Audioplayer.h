@@ -9,6 +9,9 @@
 #include <cstdint>
 #include <templates/cyclequeue.h>
 #include <dsp/pitchshifter.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Mengu {
 
@@ -17,7 +20,7 @@ public:
     AudioPlayer();
     ~AudioPlayer();
     // 0 if load_file was successful
-    uint32_t load_file(const char *path);
+    uint32_t load_file(const fs::path &file_path);
     
     void play();
 

@@ -8,7 +8,12 @@ std::string Mengu::open_file_dialog(const std::vector<std::pair<std::string, std
     char filename[1024] = {'\0'};
     
     std::string filedialog_open_command =  "zenity --file-selection ";
-    filedialog_open_command.append(" --file-filter=\'Supported Files |");
+    filedialog_open_command.append(" --file-filter=\'Supported Files (");
+    for (auto filetype: filetypes) {
+        filedialog_open_command.append(" *.");
+        filedialog_open_command.append(filetype.first);
+    }
+    filedialog_open_command.append(") |");
     for (auto filetype: filetypes) {
         filedialog_open_command.append(" *.");
         filedialog_open_command.append(filetype.first);
@@ -18,7 +23,9 @@ std::string Mengu::open_file_dialog(const std::vector<std::pair<std::string, std
     for (auto filetype: filetypes) {
         filedialog_open_command.append(" --file-filter=\'");
         filedialog_open_command.append(filetype.second);
-        filedialog_open_command.append(" | *.");
+        filedialog_open_command.append(" (*.");
+        filedialog_open_command.append(filetype.first);
+        filedialog_open_command.append(") | *.");
         filedialog_open_command.append(filetype.first);
         filedialog_open_command.append("\'");
     }

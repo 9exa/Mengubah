@@ -11,6 +11,9 @@
 #include <templates/cyclequeue.h>
 #include <dsp/pitchshifter.h>
 #include <vector>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace Mengu {
 
@@ -19,7 +22,7 @@ public:
     TimeStretchAudioPlayer();
     ~TimeStretchAudioPlayer();
 
-    uint32_t load_file(const char *path);
+    uint32_t load_file(const fs::path &file_path);
     
     void play();
 
