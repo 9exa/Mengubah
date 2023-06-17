@@ -15,7 +15,7 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(mengu_compiler_flags INTERFACE
   "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O2;>>"
-  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3;-O2>>"
+  "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3;>>"
 )
 target_link_options(mengu_compiler_flags INTERFACE "-static-libgcc" "-static-libstdc++")
 
@@ -55,6 +55,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/arch/")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 
+#account for the weird directories made by visual studio
+if (MSVC)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+endif()
 
 include_directories(PUBLIC ${NANO_INCLUDE_DIR} ${MINIAUDIO_INCLUE_DIR} ${MenguPitchy_SOURCE_DIR})
 link_directories(PUBLIC ${NANO_LIB_DIR})
@@ -85,9 +94,14 @@ if (MENGU_LV2)
     set_target_properties(Mengubah_lv2 PROPERTIES OUTPUT_NAME "mengubah")
     set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LV2_DEFAULT_DIR})
     target_link_libraries(Mengubah_lv2 PUBLIC ${NANO_LIB} mengu_compiler_flags)
+    target_include_directories(Mengubah_lv2 PUBLIC ${LV2_INCLUDE_PATH})
     target_sources(Mengubah_lv2 PRIVATE ${ALL_SRC} ${MenguPitchy_SOURCE_DIR}/mengubah_lv2.cpp)
     configure_file(mengubah.ttl.in "${LV2_DEFAULT_DIR}/mengubah.ttl")
     configure_file(manifest.ttl.in "${LV2_DEFAULT_DIR}/manifest.ttl")
+
+    if (MSVC)
+        set_target_properties(Mengubah_lv2 PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG ${LV2_DEFAULT_DIR})
+    endif()
 endif()
 
 #Test executables
