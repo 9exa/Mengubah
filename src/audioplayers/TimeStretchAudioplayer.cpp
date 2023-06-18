@@ -61,7 +61,7 @@ uint32_t Mengu::TimeStretchAudioPlayer::load_file(const fs::path &file_path) {
     ma_decoder_config decoder_config =  ma_decoder_config_init(ma_format_f32, 1, 44100);
     decoder_config.encodingFormat = get_encoding_format(file_path);
 
-    ma_result result = ma_decoder_init_file(file_path.c_str(), &decoder_config, &_decoder);
+    ma_result result = ma_decoder_init_file(file_path.string().c_str(), &decoder_config, &_decoder);
     if (result != MA_SUCCESS) {
         std::string err_msg ("Could not load file with ");
         err_msg += std::to_string(result);
