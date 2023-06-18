@@ -110,31 +110,29 @@ Widget *EffectControl::_create_prop_widget(Widget *parent, uint32_t ind, const E
         case Slider:
         case Knob:
         case Counter: {
-            // nanogui::Slider *effect_slider = new nanogui::Slider(parent);
             InputSlider *effect_slider = new InputSlider(parent);
-            std::function<void (float)> callback;
             switch (prop_desc.slider_data.scale) {
                 case Linear:
                     effect_slider->set_range({
                         prop_desc.slider_data.min_value, 
                         prop_desc.slider_data.max_value
                     });
-                    callback = [this, ind] (float value) {
-                        EffectPropPayload data { .type = Slider, .value = value };
-                        this->_callback(ind, data);
-                    };
+                    effect_slider->set_use_exp(false);
+                    
                     break;
                 case Exp:
                     // Slider is an exponential scale with the base of max_value
                     float base = ABS(prop_desc.slider_data.max_value);
                     effect_slider->set_range({ -1.0f, 1.0f });
-                    callback = [this, ind, base] (float value) {
-                        EffectPropPayload data { .type = Slider, .value = pow(base, value) };
-                        this->_callback(ind, data);
-                    };
+                    effect_slider->set_base(base);
+                    effect_slider->set_use_exp(true);
+                    effect_slider->set_value(1.0f);
                     break;
             }
-            effect_slider->set_callback(callback);
+            effect_slider->set_callback([this, ind] (float value) {
+                EffectPropPayload data { .type = Slider, .value = value };
+                this->_callback(ind, data);
+            });
             return (Widget*) effect_slider;
         }
     }

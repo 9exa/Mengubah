@@ -86,6 +86,11 @@ inline T log10(T x) {
 	return std::log10(x);
 }
 
+template <typename T>
+inline T logb(T base, T x) {
+	return std::log2(x) / std::log2(base);
+}
+
 
 template <typename T>
 inline T sqrt(T x) {

@@ -22,7 +22,7 @@ namespace Mengu {
 
 class InputSlider: public Widget {
 public:
-    InputSlider(Widget *parent);
+    InputSlider(Widget *parent, bool use_exp = false);
 
     void set_value(float value);
     float get_value() const { return _value; }
@@ -31,6 +31,9 @@ public:
     const std::function<void (float)> &get_callback() const { return _callback; }
 
     void set_range(std::pair<float, float> range);
+
+    void set_use_exp(bool use_exp);
+    void set_base(float base);
 
 
 
@@ -44,6 +47,9 @@ protected:
 
     float _min_value = -1.0f;
     float _max_value = 1.0f;
+
+    bool _use_exp;
+    float _base = 2.0f;
 };
 
 }
