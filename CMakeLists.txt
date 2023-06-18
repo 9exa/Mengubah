@@ -17,7 +17,12 @@ target_compile_options(mengu_compiler_flags INTERFACE
   "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wshadow;-Wformat=2;-Wunused;-g;-O2;>>"
   "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3;>>"
 )
-target_link_options(mengu_compiler_flags INTERFACE "-static-libgcc" "-static-libstdc++")
+
+# Statically link windows standard libraries for cross-environment compatability
+if (WIN32)
+    target_link_options(mengu_compiler_flags INTERFACE "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-static-libgcc;-static-libstdc++;-static>>")
+    set_property(TARGET mengu_compiler_flags PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -58,11 +63,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
 #account for the weird directories made by visual studio
 if (MSVC)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 endif()
 
 include_directories(PUBLIC ${NANO_INCLUDE_DIR} ${MINIAUDIO_INCLUE_DIR} ${MenguPitchy_SOURCE_DIR})
