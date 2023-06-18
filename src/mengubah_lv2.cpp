@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <lv2.h>
+#include <lv2/core/lv2.h>
 #include <array>
 
 #include "dsp/common.h"
