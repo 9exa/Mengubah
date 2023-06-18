@@ -27,6 +27,8 @@ On Arch Linux:
 
 On other systems, use your appropriate package manager.
 
+For MSVC and other build chains that don't have a package manager that can install lv2, you only need to include the lv2 header files. You can do so by cloning the lv2 repo at `https://github.com/lv2/lv2.git` and then setting the cmake variable `LV2_INCLUDE_PATH`. That is type `cmake .. -DLV2_INCLUDE_PATH=PATH/TO/LV2/REPO/include` when creating the build tree (See [Building](#building)). 
+
 Building
 ==========
 Like all CMake Projects, it's recommended to create a build directory to store the resulting build tree.
@@ -47,6 +49,11 @@ cmake --build .
 
 The results should now be in /build/bin
 
+Tested on Linux gcc, MinGW, MSVC
+
+Binaries
+=====
+For those who do not want to build it yourself [here is a link to some prebuilt binaries](https://drive.google.com/drive/folders/1WAx0_zWLrofNzsw-H7JzYDPCZMCYWLFI?usp=sharing)
 
 Other
 =====

@@ -144,3 +144,4 @@ void LPCFormantShifter::_shift_by_env(const Complex *input,
         }
     }
 }
+
